@@ -65,28 +65,41 @@ Aomega = 1.00*Sref; % [m^2] effective "swept area" for rotational damping
 k_tau = 0.00;       % [N*m / throttle_unit] yaw effectiveness slope (set 0 if unknown)
 yaw_row = k_tau * [ 1 -1 1 -1 ];   % 1x4
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set controller sample frequency
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+fs = 4000; % sample frequency of Flight controller
+Ts = 1/fs; %sample time
+
 
 %-----------------------Accelerometer data--------------------------------
 accel.range = 4;            % [g] double the +/- g value from data sheet
 accel.resolution_bits = 16;      % [bits]
 accel.resolution_LSB = accel.range*9.81/(2^accel.resolution_bits); % [m/s^2/LSB]
 accel.BW = 740;               % [Hz]
-accel.LPF_set = 10;           % [Hz]
+accel.LPF_set = 5;           % [Hz]
+accel.alpha = 2*pi*accel.LPF_set*Ts/(1+2*pi*accel.LPF_set*Ts);  % Discrete LPF parameter
 accel.tau = 1/(2*pi*accel.BW); % [s]
 %-----------------------Gyro data--------------------------------
 gyro.range = 1000;              % [dps] 
 gyro.resolution_bits = 16;      % [bits]
 gyro.resolution_LSB = (2*gyro.range/(2^gyro.resolution_bits))*(pi/180); % [rad/s/LSB]
 gyro.BW = 751;               % [Hz]
-gyro.LPF_set = 100;           % [Hz]
+gyro.LPF_set = 5;           % [Hz]
+gyro.alpha = 2*pi*gyro.LPF_set*Ts/(1+2*pi*gyro.LPF_set*Ts);  % Discrete LPF parameter
 gyro.tau = 1/(2*pi*gyro.BW); % [s]
+
+
 
 % The rest of they accel and gyro date is inputtd into the IMU block in the
 % simulink model, values pulled from BMI270 datasheet
 
-
 % ----------------------Actuator dynamics--------------------------------------
 tau_wing = 0.1/2.2; % wind step response time constant derived from eyeballed rise time
+
+% -------------------- Mahoney Filter Params -------------------
+mahoney.Kp = 0.05; % affects attitude estimate
+mahoney.Ki = 0.075; % affects bias estimate
 
 %% ---------------- STABILITY DERIVATIVE FORMULAS ----------------
 % Translational damping derivatives (N / (m/s)):
@@ -384,14 +397,8 @@ fprintf('--- R (measurement noise) ---\n');         disp(R_kf);
 
 
 %% -----------------Setup Simulation-------------------------
-% set controller sample frequency
-fs = 4000; % sample frequency of Flight controller
-Ts = 1/fs; %sample time
 
-% calculate discrte LPF paramter for accel and gyro
-fc =5;
-alpha = 2*pi*fc*Ts/(1+2*pi*fc*Ts);
-
+%{ 
 % Discretize KF===========================================================
 sys_kf_c = ss(A_kf, B_kf, C_kf, D_kf);
 sys_kf_d = c2d(sys_kf_c, Ts, 'zoh');  % Ts = 1/4000
@@ -400,6 +407,7 @@ A_kfd = sys_kf_d.A;
 B_kfd = sys_kf_d.B;
 C_kfd = C_kf;   % unchanged
 D_kfd = D_kf;   % unchanged
+%}
 
 % --------------SPECIFY INITIAL CONDITIONS---------------------------
 X0 = zeros([12,1]);
@@ -410,7 +418,7 @@ X0(3) = 0;       % z position [m] (down is positive)
 X0(4) = 0;       % u velocity [m/s]
 X0(5) = 0;       % v velocity [m/s]
 X0(6) = 0;       % w velocity [m/s]
-X0(7) = 1*1*pi/180;       % roll angle [rad]
+X0(7) = 1*0*pi/180;       % roll angle [rad]
 X0(8) = 1*0*pi/180;       % pitch angle [rad]
 X0(9) = 0;       % yaw angle [rad]
 X0(10) = 0;      % roll rate [rad/s]
@@ -443,33 +451,37 @@ P_kf0   = diag([0.01, 0.01, 0.1, 0.1]);     % initial uncertainty
 simstruct = sim('lin_hover_sim.slx');
 
 
-%% extracting variable for plot
+%% extracting variables for plot
 % extract state
-state = simstruct.get("state_output")
+state = simstruct.get("state_output");
 assignin('base','outX',state);
 time = outX.time;
-XVEC = squeeze(outX.signals.values);
+XVec = squeeze(outX.signals.values);
 
 % extract controls
-controls = simstruct.get("controls")
+controls = simstruct.get("controls");
 assignin('base','controls',controls);
 ctrl_time = controls.time;
 ctrl_vec = squeeze(controls.signals.values);
 
+% extract state estimate
+state_est = simstruct.get("state_estimate");
+assignin('base','out_est_state',state_est);
+XEst = squeeze(out_est_state.signals.values).';
 
-% Extract each column of outX according to the state convention
-x = XVEC(:, 1);   % x position [m]
-y = XVEC(:, 2);   % y position [m]
-z = XVEC(:, 3);   % z position [m] (down is positive)
-u = XVEC(:, 4);   % u velocity [m/s]
-v = XVEC(:, 5);   % v velocity [m/s]
-w = XVEC(:, 6);   % w velocity [m/s] (down is positive)
-phi = XVEC(:, 7); % roll angle [rad]
-theta = XVEC(:, 8); % pitch angle [rad]
-psi = XVEC(:, 9); % yaw angle [rad]
-p = XVEC(:, 10);  % roll rate [rad/s]
-q = XVEC(:, 11);  % pitch rate [rad/s]
-r = XVEC(:, 12);  % yaw rate [rad/s]
+% Extract each column of true state according to the state convention
+x = XVec(:, 1);   % x position    [m]
+y = XVec(:, 2);   % y position    [m]
+z = XVec(:, 3);   % z position    [m] (down is positive)
+u = XVec(:, 4);   % u velocity    [m/s]
+v = XVec(:, 5);   % v velocity    [m/s]
+w = XVec(:, 6);   % w velocity    [m/s] (down is positive)
+phi = XVec(:, 7); % roll angle    [rad]
+theta = XVec(:, 8); % pitch angle [rad]
+psi = XVec(:, 9); % yaw angle     [rad]
+p = XVec(:, 10);  % roll rate     [rad/s]
+q = XVec(:, 11);  % pitch rate    [rad/s]
+r = XVec(:, 12);  % yaw rate      [rad/s]
 
 % Extract control inputs (add feedforward term)
 pot1 = ctrl_vec(:, 1) +u0;  % Control input 1
@@ -477,8 +489,26 @@ pot2 = ctrl_vec(:, 2) +u0 ; % Control input 2
 pot3 = ctrl_vec(:, 3) +u0;  % Control input 3
 pot4 = ctrl_vec(:, 4) +u0;  % Control input 4
 
-% ------------------plot states------------------------------------------
-% ------------------plot states------------------------------------------
+% Extract each column of X_Est according to the state convention
+x_est = XEst(:, 1);   % x position    [m]
+y_est = XEst(:, 2);   % y position    [m]
+z_est = XEst(:, 3);   % z position    [m] (down is positive)
+u_est = XEst(:, 4);   % u velocity    [m/s]
+v_est = XEst(:, 5);   % v velocity    [m/s]
+w_est = XEst(:, 6);   % w velocity    [m/s] (down is positive)
+phi_est = XEst(:, 7); % roll angle    [rad]
+theta_est = XEst(:, 8); % pitch angle [rad]
+psi_est = XEst(:, 9); % yaw angle     [rad]
+p_est = XEst(:, 10);  % roll rate     [rad/s]
+q_est = XEst(:, 11);  % pitch rate    [rad/s]
+r_est = XEst(:, 12);  % yaw rate      [rad/s]
+
+
+%% Plotting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plot True States
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NEW FIGURE---------------------------------------------------------------
 figure(1);
 subplot(2,1,1);
 hold on;
@@ -512,7 +542,9 @@ title('States and Rates Over Time');
 grid on;
 hold off;
 
-% --------------- plot controls ------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plot Controls
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subplot(2,1,2);
 hold on;
 % Plot control inputs with solid lines
@@ -526,5 +558,116 @@ legend('show');
 xlabel('Time [s]');
 ylabel('Control Inputs');
 title('Control Inputs Over Time');
+grid on;
+hold off;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plot Estimated States
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% NOTE: current positions and velocities are currently unmeasured and unestimated
+
+% NEW FIGURE---------------------------------------------------------------
+figure(2);       
+subplot(2,1,1);
+hold on;
+% Define colors for solid and dotted lines
+solidColors = lines(6);  % Generate 6 distinct colors for solid lines
+dottedColors = lines(6);  % Generate 6 distinct colors for dotted lines
+
+% Plot positions with solid lines
+% plot(out_est_state.time, x_est, 'LineWidth', 1.7, 'DisplayName', 'x Position [m]', 'Color', solidColors(1,:));
+% plot(out_est_state.time, y_est, 'LineWidth', 1.7, 'DisplayName', 'y Position [m]', 'Color', solidColors(2,:));
+% plot(out_est_state.time, -z_est, 'LineWidth', 1.7, 'DisplayName', 'z Altitude [m]', 'Color', solidColors(3,:));
+% % Plot velocities with dotted lines
+% plot(out_est_state.time, u_est, '--', 'LineWidth', 1.7, 'DisplayName', 'u Velocity [m/s]', 'Color', dottedColors(1,:));
+% plot(out_est_state.time, v_est, '--', 'LineWidth', 1.7, 'DisplayName', 'v Velocity [m/s]', 'Color', dottedColors(2,:));
+% plot(out_est_state.time, -w_est, '--', 'LineWidth', 1.7, 'DisplayName', 'altitude rate [m/s]', 'Color', dottedColors(3,:));
+
+% Plot roll, pitch, and yaw angles with solid lines, CONVERT TO DEGREES AND DEG/S
+plot(out_est_state.time, phi_est*180/pi, 'LineWidth', 1.7, 'DisplayName', 'Roll Angle [deg]', 'Color', solidColors(4,:));
+plot(out_est_state.time, theta_est*180/pi, 'LineWidth', 1.7, 'DisplayName', 'Pitch Angle [deg]', 'Color', solidColors(5,:));
+plot(out_est_state.time, psi_est*180/pi, 'LineWidth', 1.7, 'DisplayName', 'Yaw Angle [deg]', 'Color', solidColors(6,:));
+% Plot rates with dotted lines
+plot(out_est_state.time, p_est*180/pi, '--', 'LineWidth', 1.7, 'DisplayName', 'Roll Rate [deg/s]', 'Color', dottedColors(4,:));
+plot(out_est_state.time, q_est*180/pi, '--', 'LineWidth', 1.7, 'DisplayName', 'Pitch Rate [deg/s]', 'Color', dottedColors(5,:));
+plot(out_est_state.time, r_est*180/pi, '--', 'LineWidth', 1.7, 'DisplayName', 'Yaw Rate [deg/s]', 'Color', dottedColors(6,:));
+
+% Configure legend and labels
+legend('show');
+xlabel('Time [s]');
+ylabel('Estimated States and Rates');
+title('Estimated States and Rates Over Time');
+grid on;
+hold off;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plot Error between true and estimated states (True - Est)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plot Error between true and estimated states (True - Est)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+subplot(2,1,2);
+hold on;
+
+% Use the estimator time as the common time base because it is shorter
+t_est = out_est_state.time;
+t_true = outX.time;
+
+% Interpolate true attitude and rates onto estimator time vector
+phi_true_i   = interp1(t_true, phi,   t_est, 'linear', 'extrap');
+theta_true_i = interp1(t_true, theta, t_est, 'linear', 'extrap');
+psi_true_i   = interp1(t_true, psi,   t_est, 'linear', 'extrap');
+
+p_true_i = interp1(t_true, p, t_est, 'linear', 'extrap');
+q_true_i = interp1(t_true, q, t_est, 'linear', 'extrap');
+r_true_i = interp1(t_true, r, t_est, 'linear', 'extrap');
+
+% Compute attitude and rate error: True - Estimate
+phi_err   = phi_true_i   - phi_est;
+theta_err = theta_true_i - theta_est;
+psi_err   = psi_true_i   - psi_est;
+
+p_err = p_true_i - p_est;
+q_err = q_true_i - q_est;
+r_err = r_true_i - r_est;
+
+% Plot attitude errors with solid lines, converted to deg
+plot(t_est, phi_err*180/pi, ...
+    'LineWidth', 1.7, ...
+    'DisplayName', 'Roll Error [deg]', ...
+    'Color', solidColors(4,:));
+
+plot(t_est, theta_err*180/pi, ...
+    'LineWidth', 1.7, ...
+    'DisplayName', 'Pitch Error [deg]', ...
+    'Color', solidColors(5,:));
+
+plot(t_est, psi_err*180/pi, ...
+    'LineWidth', 1.7, ...
+    'DisplayName', 'Yaw Error [deg]', ...
+    'Color', solidColors(6,:));
+
+% Plot rate errors with dotted lines, converted to deg/s
+plot(t_est, p_err*180/pi, '--', ...
+    'LineWidth', 1.7, ...
+    'DisplayName', 'Roll Rate Error [deg/s]', ...
+    'Color', dottedColors(4,:));
+
+plot(t_est, q_err*180/pi, '--', ...
+    'LineWidth', 1.7, ...
+    'DisplayName', 'Pitch Rate Error [deg/s]', ...
+    'Color', dottedColors(5,:));
+
+plot(t_est, r_err*180/pi, '--', ...
+    'LineWidth', 1.7, ...
+    'DisplayName', 'Yaw Rate Error [deg/s]', ...
+    'Color', dottedColors(6,:));
+
+% Configure legend and labels
+legend('show');
+xlabel('Time [s]');
+ylabel('True - Estimated Error');
+title('Attitude and Rate Estimation Error Over Time');
 grid on;
 hold off;

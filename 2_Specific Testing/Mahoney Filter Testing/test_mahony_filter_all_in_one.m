@@ -1,4 +1,4 @@
-function norm_error = test_mahony_filter_all_in_one(Kp,Ki)
+function test_mahony_filter_all_in_one(Kp,Ki)
 % test_mahony_filter_all_in_one
 %
 % Drop this whole file into MATLAB as:

@@ -1,0 +1,28 @@
+# Normalize text files in the repo
+* text=auto
+
+# Source/code/config files should use LF
+*.m     text eol=lf
+*.py    text eol=lf
+*.jl    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.sh    text eol=lf
+*.md    text eol=lf
+
+# MATLAB live scripts are binary
+*.mlx   binary
+
+# Data/text files
+*.csv   text
+*.txt   text
+
+# Binary files
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.pdf   binary
+*.mat   binary
+*.slx   binary

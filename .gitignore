@@ -1,0 +1,28 @@
+# MATLAB autosave / temp files
+*.asv
+*.m~
+*.log
+*.tmp
+
+# Simulink cache/codegen
+slprj/
+codegen/
+*.slxc
+
+# MATLAB project/user-specific files
+*.prj.user
+*.mlproj.user
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor folders
+.vscode/
+.idea/
+
+# Python cache, if you use Python
+__pycache__/
+*.pyc
+

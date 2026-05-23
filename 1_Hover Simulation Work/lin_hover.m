@@ -13,6 +13,10 @@
 
 clc, clear all, close all
 %% ---------------- USER PARAMETERS (fill these in) ----------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Physical Vehicle and Wing Parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 m   = 0.110;        % [kg] mass
 I = (1/(1000^3))*[1.94e6 0 0; 0  1.95e6 0; 0 0 3.78e6];  % inertia kg*m^2
 Ix  = I(1,1);      % [kg*m^2] inertia about body x
@@ -42,7 +46,7 @@ tau_p = 0.20;      % [s] roll-rate natural decay time constant guess
 tau_q = 0.20;      % [s] pitch-rate decay time constant guess
 tau_r = 0.40;      % [s] yaw-rate decay time constant guess
 
-% --- If using equivalent linearization of quadratic drag ---
+% --- If using equivalent linearization of quadratic drag --- (Im using this)
 v_ref = 0.50;      % [m/s] small "hover perturbation" speed for equivalent linearization
 w_ref = 0.50;      % [m/s] same idea for vertical
 p_ref = 1.00;      % [rad/s] small "hover perturbation" body rate for equivalent linearization
@@ -71,7 +75,9 @@ yaw_row = k_tau * [ 1 -1 1 -1 ];   % 1x4
 fs = 4000; % sample frequency of Flight controller
 Ts = 1/fs; %sample time
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set sensor parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %-----------------------Accelerometer data--------------------------------
 accel.range = 4;            % [g] double the +/- g value from data sheet
 accel.resolution_bits = 16;      % [bits]
@@ -90,27 +96,87 @@ gyro.alpha = 2*pi*gyro.LPF_set*Ts/(1+2*pi*gyro.LPF_set*Ts);  % Discrete LPF para
 gyro.tau = 1/(2*pi*gyro.BW); % [s]
 
 
-
-% The rest of they accel and gyro date is inputtd into the IMU block in the
-% simulink model, values pulled from BMI270 datasheet
-
-% ----------------------Actuator dynamics--------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Actuator (Wing) Parameters, used to siulate wing thrust performance
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tau_wing = 0.1/2.2; % wind step response time constant derived from eyeballed rise time
 
-% -------------------- Mahoney Filter Params -------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Mahoney Filter Paramters, used to tune state estimator performance, these
+% basically change the frequency the estimate oscillates at around a mean.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 mahoney.Kp = 0.005; % affects attitude estimate
 mahoney.Ki = 0.1; % affects bias estimate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-noise_true = 1; % 1 means sensor, thrust, and wing noise will be simulated
-                % 0 means all noise will be unsimulated, set to zero to
-                % analyze pure controller performance or compare no noise
-                % performance to full noise performance
+% Noise simulation option
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulated
+                    % 0 means all noise will be unsimulated, set to zero to
+                    % analyze pure controller performance or compare no noise
+                    % performance to full noise performance
+                   
+% these need to be set to zero if noise is not simulated
 if ~noise_true
     mahoney.Ki = 0;
     mahoney.Kp = 0;
 end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set max pot value (1000-2000)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+max_pot = 1950;
+
+%% -----------------Setup Simulation-------------------------
+
+%{ 
+% Discretize KF===========================================================
+sys_kf_c = ss(A_kf, B_kf, C_kf, D_kf);
+sys_kf_d = c2d(sys_kf_c, Ts, 'zoh');  % Ts = 1/4000
+
+A_kfd = sys_kf_d.A;
+B_kfd = sys_kf_d.B;
+C_kfd = C_kf;   % unchanged
+D_kfd = D_kf;   % unchanged
+%}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Specify Initial Conditions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+X0 = zeros([12,1]);
+% Edit the initial state vector X0
+X0(1) = 0;       % x position [m]
+X0(2) = 0;       % y position [m]
+X0(3) = 0;       % z position [m] (down is positive)
+X0(4) = 0;       % u velocity [m/s]
+X0(5) = 0;       % v velocity [m/s]
+X0(6) = 0;       % w velocity [m/s]
+X0(7) = 0*pi/180;       % roll angle [rad]
+X0(8) = 0*pi/180;       % pitch angle [rad]
+X0(9) = 0;       % yaw angle [rad]
+X0(10) = 0;      % roll rate [rad/s]
+X0(11) = 0;      % pitch rate [rad/s]
+X0(12) = 0;      % yaw rate [rad/s]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Specify Reference Input (What you command vehcicle to do)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Xref = zeros([12,1]);
+% Edit the initial state vector X0
+Xref(1) = 0;       % x position [m]
+Xref(2) = 0;       % y position [m]
+Xref(3) = 0;      % z position [m] (down is positive)
+Xref(4) = 0;       % u velocity [m/s]
+Xref(5) = 0;       % v velocity [m/s]
+Xref(6) = 0;       % w velocity [m/s]
+Xref(7) = 0;       % roll angle [rad]
+Xref(8) = 0;       % pitch angle [rad]
+Xref(9) = 0;       % yaw angle [rad]
+Xref(10) = 0;      % roll rate [rad/s]
+Xref(11) = 0;      % pitch rate [rad/s]
+Xref(12) = 0;      % yaw rate [rad/s]
+
+% ============================================================
 
 %% ---------------- STABILITY DERIVATIVE FORMULAS ----------------
 % Translational damping derivatives (N / (m/s)):
@@ -136,6 +202,7 @@ else
 end
 
 %% ---------------- BUILD A MATRIX (12x12) ----------------
+
 % State: [x y z u v w phi theta psi p q r]'
 A = zeros(12,12);
 
@@ -288,10 +355,10 @@ scaleGain = 1./Kdc;
 %   p_dot     = -(Lp/Ix)*p   (aerodynamic damping from your linearization)
 %   q_dot     = -(Mq/Iy)*q
 
-A_kf = [ 0,  0,          1,          0;       % phi_dot   = p
-         0,  0,          0,          1;       % theta_dot = q
-         0,  0,  -Lp/Ix,             0;       % p_dot     = damping on p
-         0,  0,          0,  -Mq/Iy  ];      % q_dot     = damping on q
+% A_kf = [ 0,  0,          1,          0;       % phi_dot   = p
+%          0,  0,          0,          1;       % theta_dot = q
+%          0,  0,  -Lp/Ix,             0;       % p_dot     = damping on p
+%          0,  0,          0,  -Mq/Iy  ];      % q_dot     = damping on q
 
 % --- B matrix (4x4) ---
 % Maps the 4 flapper delta-throttle inputs to the KF states.
@@ -302,10 +369,10 @@ A_kf = [ 0,  0,          1,          0;       % phi_dot   = p
 %   B(10,:) = (S*C11/Ix) * [0 -1  0  1]
 %   B(11,:) = (S*C11/Iy) * [1  0 -1  0]
 
-B_kf = [ 0,               0,             0,              0;
-         0,               0,             0,              0;
-         (S*C11/Ix)*[0   -1   0   1];
-         (S*C11/Iy)*[1    0  -1   0] ];
+% B_kf = [ 0,               0,             0,              0;
+%          0,               0,             0,              0;
+%          (S*C11/Ix)*[0   -1   0   1];
+%          (S*C11/Iy)*[1    0  -1   0] ];
 
 % NOTE: If you choose NOT to feed control inputs into the KF (simpler, common
 % in practice), set B_kf = zeros(4,4) and lump control torques into Q.
@@ -323,16 +390,16 @@ B_kf = [ 0,               0,             0,              0;
 %   ay_accel = +g * phi     (right roll tilts accel positive y)
 %
 %           phi   theta    p    q
-C_kf = [    0,    0,      1,   0;    % p_gyro   = p
-             0,    0,      0,   1;    % q_gyro   = q
-             0,   -g,      0,   0;    % ax_accel = -g*theta
-             g,    0,      0,   0  ]; % ay_accel = +g*phi
+% C_kf = [    0,    0,      1,   0;    % p_gyro   = p
+%              0,    0,      0,   1;    % q_gyro   = q
+%              0,   -g,      0,   0;    % ax_accel = -g*theta
+%              g,    0,      0,   0  ]; % ay_accel = +g*phi
 
 
 
 %--- D matrix (4x4) ---
 % No direct feedthrough from inputs to measurements in this sensor model.
-D_kf = zeros(4, 4);
+%D_kf = zeros(4, 4);
 
 
 
@@ -358,12 +425,12 @@ D_kf = zeros(4, 4);
 % p, q: damping model (Lp, Mq) is a rough first-guess, so give these more room.
 %   sigma_p = sigma_q ~ 0.1 rad/s of unmodeled angular acceleration uncertainty
 
-sigma_phi   = 0.005;   % [rad]
-sigma_theta = 0.005;   % [rad]
-sigma_p     = 0.10;    % [rad/s]
-sigma_q     = 0.10;    % [rad/s]
+% sigma_phi   = 0.005;   % [rad]
+% sigma_theta = 0.005;   % [rad]
+% sigma_p     = 0.10;    % [rad/s]
+% sigma_q     = 0.10;    % [rad/s]
 
-Q_kf = diag([sigma_phi^2, sigma_theta^2, sigma_p^2, sigma_q^2]);
+% Q_kf = diag([sigma_phi^2, sigma_theta^2, sigma_p^2, sigma_q^2]);
 
 % --- R: Measurement Noise Covariance (4x4, diagonal starting point) ---
 %
@@ -376,87 +443,42 @@ Q_kf = diag([sigma_phi^2, sigma_theta^2, sigma_p^2, sigma_q^2]);
 %   After your 100 Hz digital LPF (alpha = gyro_alpha), effective BW ~ 100 Hz:
 %   sigma_gyro_lpf = 0.007 * sqrt(100) * (pi/180) ~ 0.006 rad/s
 %   Use ~2x the LPF value for margin:
-sigma_gyro  = 0.05;   % [rad/s]
+%sigma_gyro  = 0.05;   % [rad/s]
 
 % ACCELEROMETER noise (as tilt sensor):
 %   BMI270 noise density ~ 180 ug/sqrt(Hz)
 %   At 10 Hz LPF setting (accel.LPF_set = 10):
 %   sigma_accel_lpf = 180e-6 * 9.81 * sqrt(10) ~ 0.0056 m/s^2
 %   But in vibration-heavy flapping environment, multiply by ~5-10x:
-sigma_accel = 1;    % [m/s^2]  (conservative for flapping platform)
+%sigma_accel = 1;    % [m/s^2]  (conservative for flapping platform)
 
 % NOTE: The accelerometer noise is DOMINATED by vibration from flapping wings,
 % NOT electronics noise. You will likely need to increase sigma_accel
 % significantly after flight tests. Start at 0.05 and increase if the KF
 % angle estimate is too jittery.
 
-R_kf = diag([sigma_gyro^2,  sigma_gyro^2, ...
+%R_kf = diag([sigma_gyro^2,  sigma_gyro^2, ...
              sigma_accel^2, sigma_accel^2]);
 
 % --- N: Cross-correlation (usually zero) ---
-N_kf = zeros(4, 4);
+%N_kf = zeros(4, 4);
 
 %============================================================
 %  DISPLAY
 % ============================================================
-fprintf('\n--- Reduced KF A matrix (4x4) ---\n');  disp(A_kf);
-fprintf('--- Reduced KF B matrix (4x4) ---\n');    disp(B_kf);
-fprintf('--- Reduced KF C matrix (4x4) ---\n');    disp(C_kf);
-fprintf('\n--- Q (process noise) ---\n');            disp(Q_kf);
-fprintf('--- R (measurement noise) ---\n');         disp(R_kf);
+% fprintf('\n--- Reduced KF A matrix (4x4) ---\n');  disp(A_kf);
+% fprintf('--- Reduced KF B matrix (4x4) ---\n');    disp(B_kf);
+% fprintf('--- Reduced KF C matrix (4x4) ---\n');    disp(C_kf);
+% fprintf('\n--- Q (process noise) ---\n');            disp(Q_kf);
+% fprintf('--- R (measurement noise) ---\n');         disp(R_kf);
 
 
 
-%% -----------------Setup Simulation-------------------------
 
-%{ 
-% Discretize KF===========================================================
-sys_kf_c = ss(A_kf, B_kf, C_kf, D_kf);
-sys_kf_d = c2d(sys_kf_c, Ts, 'zoh');  % Ts = 1/4000
-
-A_kfd = sys_kf_d.A;
-B_kfd = sys_kf_d.B;
-C_kfd = C_kf;   % unchanged
-D_kfd = D_kf;   % unchanged
-%}
-
-% --------------SPECIFY INITIAL CONDITIONS---------------------------
-X0 = zeros([12,1]);
-% Edit the initial state vector X0
-X0(1) = 0;       % x position [m]
-X0(2) = 0;       % y position [m]
-X0(3) = 0;       % z position [m] (down is positive)
-X0(4) = 0;       % u velocity [m/s]
-X0(5) = 0;       % v velocity [m/s]
-X0(6) = 0;       % w velocity [m/s]
-X0(7) = 0*pi/180;       % roll angle [rad]
-X0(8) = 0*pi/180;       % pitch angle [rad]
-X0(9) = 0;       % yaw angle [rad]
-X0(10) = 0;      % roll rate [rad/s]
-X0(11) = 0;      % pitch rate [rad/s]
-X0(12) = 0;      % yaw rate [rad/s]
-
-% --------------SPECIFY REFERENCE INPUT---------------------------
-Xref = zeros([12,1]);
-% Edit the initial state vector X0
-Xref(1) = 0;       % x position [m]
-Xref(2) = 0;       % y position [m]
-Xref(3) = 0;      % z position [m] (down is positive)
-Xref(4) = 0;       % u velocity [m/s]
-Xref(5) = 0;       % v velocity [m/s]
-Xref(6) = 0;       % w velocity [m/s]
-Xref(7) = 0;       % roll angle [rad]
-Xref(8) = 0;       % pitch angle [rad]
-Xref(9) = 0;       % yaw angle [rad]
-Xref(10) = 0;      % roll rate [rad/s]
-Xref(11) = 0;      % pitch rate [rad/s]
-Xref(12) = 0;      % yaw rate [rad/s]
-
-% ============================================================
 %  INITIAL STATE AND COVARIANCE FOR SIMULINK BLOCK
 % ============================================================
-x_kf0   = [X0(7); X0(8); X0(10); X0(11)];  % [phi0, theta0, p0, q0]
-P_kf0   = diag([0.01, 0.01, 0.1, 0.1]);     % initial uncertainty
+%x_kf0   = [X0(7); X0(8); X0(10); X0(11)];  % [phi0, theta0, p0, q0]
+%P_kf0   = diag([0.01, 0.01, 0.1, 0.1]);     % initial uncertainty
 
 %% RUN SIMULATION
 simstruct = sim('lin_hover_sim.slx');

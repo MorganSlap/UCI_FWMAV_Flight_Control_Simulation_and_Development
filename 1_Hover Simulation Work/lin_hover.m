@@ -98,8 +98,19 @@ gyro.tau = 1/(2*pi*gyro.BW); % [s]
 tau_wing = 0.1/2.2; % wind step response time constant derived from eyeballed rise time
 
 % -------------------- Mahoney Filter Params -------------------
-mahoney.Kp = 0.05; % affects attitude estimate
-mahoney.Ki = 0.075; % affects bias estimate
+mahoney.Kp = 0.005; % affects attitude estimate
+mahoney.Ki = 0.1; % affects bias estimate
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+noise_true = 1; % 1 means sensor, thrust, and wing noise will be simulated
+                % 0 means all noise will be unsimulated, set to zero to
+                % analyze pure controller performance or compare no noise
+                % performance to full noise performance
+if ~noise_true
+    mahoney.Ki = 0;
+    mahoney.Kp = 0;
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% ---------------- STABILITY DERIVATIVE FORMULAS ----------------
 % Translational damping derivatives (N / (m/s)):
@@ -418,8 +429,8 @@ X0(3) = 0;       % z position [m] (down is positive)
 X0(4) = 0;       % u velocity [m/s]
 X0(5) = 0;       % v velocity [m/s]
 X0(6) = 0;       % w velocity [m/s]
-X0(7) = 1*0*pi/180;       % roll angle [rad]
-X0(8) = 1*0*pi/180;       % pitch angle [rad]
+X0(7) = 5*pi/180;       % roll angle [rad]
+X0(8) = 0*pi/180;       % pitch angle [rad]
 X0(9) = 0;       % yaw angle [rad]
 X0(10) = 0;      % roll rate [rad/s]
 X0(11) = 0;      % pitch rate [rad/s]

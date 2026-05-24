@@ -24,7 +24,8 @@ Iy  = I(2,2);      % [kg*m^2] inertia about body y
 Iz  = I(3,3);      % [kg*m^2] inertia about body z
 S   = 0.11;        % [m] arm length (hinge-to-CG moment arm for thrust)
 wing_type = 5*3;   % [in^2] 5x3 wing
-C11  = 4.58e-4;    % [N / throttle_unit] thrust slope per flapper: Ti = C1*u_i + C2
+% C11 and C12 ARE TAKEN FROM WING TESTING DATA------------------------------------
+C11  = 4.58e-4;    % [N / throttle_unit] thrust slope per flapper: Ti = C1*u_i + C2,
 C21 = -.562;        
 % NOTE: C2 affects trim u0, NOT the linearized B matrix.
 % NOTE: For now assume C1i and C2i is same for all 4 flappers
@@ -76,22 +77,22 @@ fs = 4000; % sample frequency of Flight controller
 Ts = 1/fs; %sample time
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% set sensor parameters
+% set accel and gyro parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%-----------------------Accelerometer data--------------------------------
+%-----------------------ACCELEROMETER DATA--------------------------------
 accel.range = 4;            % [g] double the +/- g value from data sheet
 accel.resolution_bits = 16;      % [bits]
 accel.resolution_LSB = accel.range*9.81/(2^accel.resolution_bits); % [m/s^2/LSB]
 accel.BW = 740;               % [Hz]
-accel.LPF_set = 5;           % [Hz]
+accel.LPF_set = 5;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 accel.alpha = 2*pi*accel.LPF_set*Ts/(1+2*pi*accel.LPF_set*Ts);  % Discrete LPF parameter
 accel.tau = 1/(2*pi*accel.BW); % [s]
-%-----------------------Gyro data--------------------------------
+%-----------------------GYRO DATA--------------------------------
 gyro.range = 1000;              % [dps] 
 gyro.resolution_bits = 16;      % [bits]
 gyro.resolution_LSB = (2*gyro.range/(2^gyro.resolution_bits))*(pi/180); % [rad/s/LSB]
 gyro.BW = 751;               % [Hz]
-gyro.LPF_set = 5;           % [Hz]
+gyro.LPF_set = 5;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 gyro.alpha = 2*pi*gyro.LPF_set*Ts/(1+2*pi*gyro.LPF_set*Ts);  % Discrete LPF parameter
 gyro.tau = 1/(2*pi*gyro.BW); % [s]
 
@@ -122,8 +123,40 @@ if ~noise_true
     mahoney.Kp = 0;
 end
 
+
+% Set PID values and Strength, for now the vehicle is configured for 
+% ANGLE MODE, so strength value matters since it controls the outer PID
+% loop
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Set max pot value (1000-2000)
+% Set roll PID
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+roll_P = 0.022;
+roll_I = 0.005;
+roll_D = 0;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set pitch PID
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+pitch_P = .022*Iy/Ix;
+pitch_I = 0.005*Iy/Ix;
+pitch_D = 0;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set yaw PID, for now yaw is disabled above (k_tau = 0) since the
+% vehicle has no yaw control, ignore these for now
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+yaw_P = 0.001;
+yaw_I = 0.001;
+yaw_D = 0;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set Angle Mode Strength (0-100)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+strength = 50;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set max pot value (1000-2000) This is analagous to max throttle setting
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 max_pot = 1950;
 
@@ -458,7 +491,7 @@ scaleGain = 1./Kdc;
 % angle estimate is too jittery.
 
 %R_kf = diag([sigma_gyro^2,  sigma_gyro^2, ...
-             sigma_accel^2, sigma_accel^2]);
+             %sigma_accel^2, sigma_accel^2]);
 
 % --- N: Cross-correlation (usually zero) ---
 %N_kf = zeros(4, 4);

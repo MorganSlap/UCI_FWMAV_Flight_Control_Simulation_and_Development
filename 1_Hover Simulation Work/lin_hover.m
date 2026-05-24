@@ -106,8 +106,8 @@ tau_wing = 0.1/2.2; % wind step response time constant derived from eyeballed ri
 % Mahoney Filter Paramters, used to tune state estimator performance, these
 % basically change the frequency the estimate oscillates at around a mean.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-mahoney.Kp = 0.005; % affects attitude estimate
-mahoney.Ki = 0.1; % affects bias estimate
+mahoney.Kp = 0.25; % affects attitude estimate
+mahoney.Ki = 0.0; % affects bias estimate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Noise simulation option

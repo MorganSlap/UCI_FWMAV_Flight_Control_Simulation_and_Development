@@ -107,7 +107,7 @@ tau_wing = 0.1/2.2; % wind step response time constant derived from eyeballed ri
 % basically change the frequency the estimate oscillates at around a mean.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 mahoney.Kp = 0.25; % affects attitude estimate
-mahoney.Ki = 0.0; % affects bias estimate
+mahoney.Ki = 0.1; % affects bias estimate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Noise simulation option
@@ -184,7 +184,7 @@ X0(3) = 0;       % z position [m] (down is positive)
 X0(4) = 0;       % u velocity [m/s]
 X0(5) = 0;       % v velocity [m/s]
 X0(6) = 0;       % w velocity [m/s]
-X0(7) = 2*pi/180;       % roll angle [rad]
+X0(7) = 10*pi/180;       % roll angle [rad]
 X0(8) = 0*pi/180;       % pitch angle [rad]
 X0(9) = 0;       % yaw angle [rad]
 X0(10) = 0;      % roll rate [rad/s]

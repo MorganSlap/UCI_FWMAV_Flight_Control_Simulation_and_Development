@@ -184,7 +184,7 @@ X0(3) = 0;       % z position [m] (down is positive)
 X0(4) = 0;       % u velocity [m/s]
 X0(5) = 0;       % v velocity [m/s]
 X0(6) = 0;       % w velocity [m/s]
-X0(7) = 10*pi/180;       % roll angle [rad]
+X0(7) = 0*pi/180;       % roll angle [rad]
 X0(8) = 0*pi/180;       % pitch angle [rad]
 X0(9) = 0;       % yaw angle [rad]
 X0(10) = 0;      % roll rate [rad/s]
@@ -263,6 +263,9 @@ A(10,10) = -Lp/Ix;  % p_dot
 A(11,11) = -Mq/Iy;  % q_dot
 A(12,12) = -Nr/Iz;  % r_dot
 
+sysID_data = load("C:\Users\bmatt\Local Documents\UCI_FWMAV_Flight_Control_Simulation_and_Development\6_System ID\quadflapper_ssest_hover_model.mat");
+% Remake A matrix with sysID data
+A(7:12,7:12) = sysID_data.A6c;
 
 %% ---------------- BUILD B MATRIX (12x4) ----------------
 % Inputs: delta_u = [delta_u1 delta_u2 delta_u3 delta_u4]'
@@ -282,6 +285,9 @@ B(11,:) = (S*C11/Iy) * [1 0 -1 0];
 
 % Yaw moment (mechanism-dependent). If unknown, leave as zeros and identify.
 B(12,:) = (1/Iz) * yaw_row;
+
+% Remake B matrix with sysID data
+B(7:12,:) = sysID_data.B6c;
 
 MMA=[1  0  1 1
      1 -1  0 -1

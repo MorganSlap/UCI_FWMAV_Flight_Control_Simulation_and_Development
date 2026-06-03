@@ -107,7 +107,7 @@ tau_wing = 0.1/2.2; % wind step response time constant derived from eyeballed ri
 % basically change the frequency the estimate oscillates at around a mean.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 mahoney.Kp = 0.25; % affects attitude estimate
-mahoney.Ki = 0.1; % affects bias estimate
+mahoney.Ki = 0.05; % affects bias estimate
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Noise simulation option
@@ -119,8 +119,8 @@ noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulat
                    
 % these need to be set to zero if noise is not simulated
 if ~noise_true
+    mahoney.Kp = 0.25;
     mahoney.Ki = 0;
-    mahoney.Kp = 0;
 end
 
 
@@ -184,7 +184,7 @@ X0(3) = 0;       % z position [m] (down is positive)
 X0(4) = 0;       % u velocity [m/s]
 X0(5) = 0;       % v velocity [m/s]
 X0(6) = 0;       % w velocity [m/s]
-X0(7) = 10*pi/180;       % roll angle [rad]
+X0(7) = 0*pi/180;       % roll angle [rad]
 X0(8) = 0*pi/180;       % pitch angle [rad]
 X0(9) = 0;       % yaw angle [rad]
 X0(10) = 0;      % roll rate [rad/s]
@@ -604,7 +604,7 @@ plot(time, r*180/pi, '--', 'LineWidth', 1.7, 'DisplayName', 'Yaw Rate [deg/s]', 
 legend('show');
 xlabel('Time [s]');
 ylabel('States and Rates');
-title('States and Rates Over Time');
+title('True States and Rates Over Time');
 grid on;
 hold off;
 
@@ -622,8 +622,8 @@ plot(ctrl_time, pot4, 'LineWidth', 1.7, 'DisplayName', 'Control Input 4 (pot4)')
 % Configure legend and labels
 legend('show');
 xlabel('Time [s]');
-ylabel('Control Inputs');
-title('Control Inputs Over Time');
+ylabel('Control Inputs (Pot Value)');
+title('True Control Inputs Over Time');
 grid on;
 hold off;
 

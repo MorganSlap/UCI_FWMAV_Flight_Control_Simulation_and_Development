@@ -112,7 +112,7 @@ mahoney.Ki = 0.05; % affects bias estimate
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Noise simulation option
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulated
+noise_true = 0;     % 1 means sensor, thrust, and wing noise will all be simulated
                     % 0 means all noise will be unsimulated, set to zero to
                     % analyze pure controller performance or compare no noise
                     % performance to full noise performance
@@ -186,7 +186,7 @@ X0(4) = 0;       % u velocity [m/s]
 X0(5) = 0;       % v velocity [m/s]
 X0(6) = 0;       % w velocity [m/s]
 X0(7) = 0*pi/180;       % roll angle [rad]
-X0(8) = 0*pi/180;       % pitch angle [rad]
+X0(8) = 5*pi/180;       % pitch angle [rad]
 X0(9) = 0;       % yaw angle [rad]
 X0(10) = 0;      % roll rate [rad/s]
 X0(11) = 0;      % pitch rate [rad/s]

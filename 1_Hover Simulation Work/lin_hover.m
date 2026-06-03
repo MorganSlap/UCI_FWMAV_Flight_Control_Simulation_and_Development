@@ -116,6 +116,7 @@ noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulat
                     % 0 means all noise will be unsimulated, set to zero to
                     % analyze pure controller performance or compare no noise
                     % performance to full noise performance
+seed = 23341;        % Chose random seed for noise generation
                    
 % these need to be set to zero if noise is not simulated
 if ~noise_true
@@ -514,6 +515,7 @@ scaleGain = 1./Kdc;
 %P_kf0   = diag([0.01, 0.01, 0.1, 0.1]);     % initial uncertainty
 
 %% RUN SIMULATION
+t_sim = 10; % [sec] decide how long you want to simulate flight
 simstruct = sim('lin_hover_sim.slx');
 
 
@@ -601,10 +603,10 @@ plot(time, q*180/pi, '--', 'LineWidth', 1.7, 'DisplayName', 'Pitch Rate [deg/s]'
 plot(time, r*180/pi, '--', 'LineWidth', 1.7, 'DisplayName', 'Yaw Rate [deg/s]', 'Color', dottedColors(6,:));
 
 % Configure legend and labels
-legend('show');
-xlabel('Time [s]');
-ylabel('States and Rates');
-title('True States and Rates Over Time');
+legend('show','FontSize',14);
+xlabel('Time [s]','FontSize',14);
+ylabel('States and Rates','FontSize',14);
+title('True States and Rates Over Time','FontSize',14);
 grid on;
 hold off;
 
@@ -620,10 +622,10 @@ plot(ctrl_time, pot3, 'LineWidth', 1.7, 'DisplayName', 'Control Input 3 (pot3)')
 plot(ctrl_time, pot4, 'LineWidth', 1.7, 'DisplayName', 'Control Input 4 (pot4)');
 
 % Configure legend and labels
-legend('show');
-xlabel('Time [s]');
-ylabel('Control Inputs (Pot Value)');
-title('True Control Inputs Over Time');
+legend('show','FontSize',14);
+xlabel('Time [s]','FontSize',14);
+ylabel('Control Inputs (Pot Value)','FontSize',14);
+title('True Control Inputs Over Time','FontSize',14);
 grid on;
 hold off;
 
@@ -659,10 +661,10 @@ plot(out_est_state.time, q_est*180/pi, '--', 'LineWidth', 1.7, 'DisplayName', 'P
 plot(out_est_state.time, r_est*180/pi, '--', 'LineWidth', 1.7, 'DisplayName', 'Yaw Rate [deg/s]', 'Color', dottedColors(6,:));
 
 % Configure legend and labels
-legend('show');
-xlabel('Time [s]');
-ylabel('Estimated States and Rates');
-title('Estimated States and Rates Over Time');
+legend('show','FontSize',14);
+xlabel('Time [s]','FontSize',14);
+ylabel('Estimated States and Rates','FontSize',14);
+title('Estimated States and Rates Over Time','FontSize',14);
 grid on;
 hold off;
 
@@ -731,9 +733,9 @@ plot(t_est, r_err*180/pi, '--', ...
     'Color', dottedColors(6,:));
 
 % Configure legend and labels
-legend('show');
-xlabel('Time [s]');
-ylabel('True - Estimated Error');
-title('Attitude and Rate Estimation Error Over Time');
+legend('show','FontSize',14);
+xlabel('Time [s]','FontSize',14);
+ylabel('True - Estimated Error','FontSize',14);
+title('Attitude and Rate Estimation Error Over Time','FontSize',14);
 grid on;
 hold off;

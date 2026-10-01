@@ -34,7 +34,7 @@ wing_area = pi*(4*wing_type)*0.00064516; % m^2 assume wing sections are quarter 
                                          % one ellipse per wing A = pi*a*b,
                                          % a*b = 4*wing_type
                                                 
-Sref = 4*wing_area; % [m^2] total wing reference area (both wings summed or choose your convention)
+Aref = 4*wing_area; % [m^2] total wing reference area (both wings summed or choose your convention)
 
 g   = 9.81;        % [m/s^2]
 rho = 1.225;       % [kg/m^3] air density (sea level)
@@ -59,11 +59,11 @@ CDx = 1.0;  CDy = 1.0;  CDz = 1.0;        % translational
 CDw = 1.0;                               % rotational (lumped)
 
 % Effective projected areas (tunable knobs)
-Ax = 0.50*Sref;     % [m^2] effective frontal area in body x
-Ay = 0.50*Sref;     % [m^2] effective side area in body y
-Az = 0.35*Sref;     % [m^2] effective area in body z (for vertical damping)
+Ax = 0.50*Aref;     % [m^2] effective frontal area in body x
+Ay = 0.50*Aref;     % [m^2] effective side area in body y
+Az = 0.35*Aref;     % [m^2] effective area in body z (for vertical damping)
 
-Aomega = 1.00*Sref; % [m^2] effective "swept area" for rotational damping
+Aomega = 1.00*Aref; % [m^2] effective "swept area" for rotational damping
 
 % Yaw torque mapping (if unknown, set all zeros and identify later)
 % tau_z = k_tau * [ +1 -1 +1 -1 ] * delta_u is a quadrotor-style pattern.
@@ -84,7 +84,7 @@ accel.range = 4;            % [g] double the +/- g value from data sheet
 accel.resolution_bits = 16;      % [bits]
 accel.resolution_LSB = accel.range*9.81/(2^accel.resolution_bits); % [m/s^2/LSB]
 accel.BW = 740;               % [Hz]
-accel.LPF_set = 100;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+accel.LPF_set = 5;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 accel.alpha = 2*pi*accel.LPF_set*Ts/(1+2*pi*accel.LPF_set*Ts);  % Discrete LPF parameter
 accel.tau = 1/(2*pi*accel.BW); % [s]
 %-----------------------GYRO DATA--------------------------------
@@ -92,7 +92,7 @@ gyro.range = 1000;              % [dps]
 gyro.resolution_bits = 16;      % [bits]
 gyro.resolution_LSB = (2*gyro.range/(2^gyro.resolution_bits))*(pi/180); % [rad/s/LSB]
 gyro.BW = 751;               % [Hz]
-gyro.LPF_set = 100;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+gyro.LPF_set = 5;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 gyro.alpha = 2*pi*gyro.LPF_set*Ts/(1+2*pi*gyro.LPF_set*Ts);  % Discrete LPF parameter
 gyro.tau = 1/(2*pi*gyro.BW); % [s]
 
@@ -100,7 +100,7 @@ gyro.tau = 1/(2*pi*gyro.BW); % [s]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Actuator (Wing) Parameters, used to siulate wing thrust performance
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-tau_wing = 0.1/2.2; % wind step response time constant derived from eyeballed rise time
+tau_wing = 0.1/2.2; % wing step response time constant derived from eyeballed rise time
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Mahoney Filter Paramters, used to tune state estimator performance, these
@@ -116,7 +116,7 @@ noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulat
                     % 0 means all noise will be unsimulated, set to zero to
                     % analyze pure controller performance or compare no noise
                     % performance to full noise performance
-seed = 13641;       % Chose random seed for noise generation, 23341 was the one used for most testing
+seed = 23341;       % Chose random seed for noise generation, 23341 was the one used for most testing
                    
 % these need to be set to zero if noise is not simulated
 if ~noise_true
@@ -138,7 +138,7 @@ roll_D = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set pitch PID
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-pitch_P = .022*Iy/Ix;
+pitch_P = 0.022*Iy/Ix;
 pitch_I = 0.005*Iy/Ix;
 pitch_D = 0;
 

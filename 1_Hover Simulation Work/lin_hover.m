@@ -112,11 +112,11 @@ mahoney.Ki = 0.05; % affects bias estimate
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Noise simulation option
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-noise_true = 0;     % 1 means sensor, thrust, and wing noise will all be simulated
+noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulated
                     % 0 means all noise will be unsimulated, set to zero to
                     % analyze pure controller performance or compare no noise
                     % performance to full noise performance
-seed = 200;       % Chose random seed for noise generation, 23341 was the one used for most testing
+seed = 23341;       % Chose random seed for noise generation, 23341 was the one used for most testing
                    
 % these need to be set to zero if noise is not simulated
 if ~noise_true
@@ -515,7 +515,7 @@ scaleGain = 1./Kdc;
 %P_kf0   = diag([0.01, 0.01, 0.1, 0.1]);     % initial uncertainty
 
 %% RUN SIMULATION
-sim_fidelity = 'low'; % high means model will run the non-linear dynamics
+sim_fidelity = 'high'; % high means model will run the non-linear dynamics
                        % low means model will run the linear dynamics
 
 

@@ -112,11 +112,11 @@ mahoney.Ki = 0.05; % affects bias estimate
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Noise simulation option
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulated
+noise_true = 0;     % 1 means sensor, thrust, and wing noise will all be simulated
                     % 0 means all noise will be unsimulated, set to zero to
                     % analyze pure controller performance or compare no noise
                     % performance to full noise performance
-seed = 23341;       % Chose random seed for noise generation, 23341 was the one used for most testing
+seed = 200;       % Chose random seed for noise generation, 23341 was the one used for most testing
                    
 % these need to be set to zero if noise is not simulated
 if ~noise_true
@@ -185,7 +185,7 @@ X0(3) = 0;       % z position [m] (down is positive)
 X0(4) = 0;       % u velocity [m/s]
 X0(5) = 0;       % v velocity [m/s]
 X0(6) = 0;       % w velocity [m/s]
-X0(7) = 0*pi/180;       % roll angle [rad]
+X0(7) = 5*pi/180;       % roll angle [rad]
 X0(8) = 0*pi/180;       % pitch angle [rad]
 X0(9) = 0;       % yaw angle [rad]
 X0(10) = 0;      % roll rate [rad/s]
@@ -515,6 +515,10 @@ scaleGain = 1./Kdc;
 %P_kf0   = diag([0.01, 0.01, 0.1, 0.1]);     % initial uncertainty
 
 %% RUN SIMULATION
+sim_fidelity = 'low'; % high means model will run the non-linear dynamics
+                       % low means model will run the linear dynamics
+
+
 t_sim = 10; % [sec] decide how long you want to simulate flight
 simstruct = sim('lin_hover_sim.slx');
 

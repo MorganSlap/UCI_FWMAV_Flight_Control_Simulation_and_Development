@@ -515,6 +515,10 @@ scaleGain = 1./Kdc;
 %P_kf0   = diag([0.01, 0.01, 0.1, 0.1]);     % initial uncertainty
 
 %% RUN SIMULATION
+sim_fidelity = 'high'; % high means model will run the non-linear dynamics
+                       % low means model will run the linear dynamics
+
+
 t_sim = 10; % [sec] decide how long you want to simulate flight
 simstruct = sim('lin_hover_sim.slx');
 

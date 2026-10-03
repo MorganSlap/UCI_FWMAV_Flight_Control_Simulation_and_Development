@@ -112,7 +112,7 @@ mahoney.Ki = 0.05; % affects bias estimate
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Noise simulation option
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-noise_true = 0;     % 1 means sensor, thrust, and wing noise will all be simulated
+noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulated
                     % 0 means all noise will be unsimulated, set to zero to
                     % analyze pure controller performance or compare no noise
                     % performance to full noise performance

@@ -84,7 +84,7 @@ accel.range = 4;            % [g] double the +/- g value from data sheet
 accel.resolution_bits = 16;      % [bits]
 accel.resolution_LSB = accel.range*9.81/(2^accel.resolution_bits); % [m/s^2/LSB]
 accel.BW = 740;               % [Hz]
-accel.LPF_set = 5;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+accel.LPF_set = 100;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 accel.alpha = 2*pi*accel.LPF_set*Ts/(1+2*pi*accel.LPF_set*Ts);  % Discrete LPF parameter
 accel.tau = 1/(2*pi*accel.BW); % [s]
 %-----------------------GYRO DATA--------------------------------
@@ -92,7 +92,7 @@ gyro.range = 1000;              % [dps]
 gyro.resolution_bits = 16;      % [bits]
 gyro.resolution_LSB = (2*gyro.range/(2^gyro.resolution_bits))*(pi/180); % [rad/s/LSB]
 gyro.BW = 751;               % [Hz]
-gyro.LPF_set = 5;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+gyro.LPF_set = 100;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 gyro.alpha = 2*pi*gyro.LPF_set*Ts/(1+2*pi*gyro.LPF_set*Ts);  % Discrete LPF parameter
 gyro.tau = 1/(2*pi*gyro.BW); % [s]
 
@@ -112,7 +112,7 @@ mahoney.Ki = 0.05; % affects bias estimate
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Noise simulation option
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-noise_true = 1;     % 1 means sensor, thrust, and wing noise will all be simulated
+noise_true = 0;     % 1 means sensor, thrust, and wing noise will all be simulated
                     % 0 means all noise will be unsimulated, set to zero to
                     % analyze pure controller performance or compare no noise
                     % performance to full noise performance
@@ -185,7 +185,7 @@ X0(3) = 0;       % z position [m] (down is positive)
 X0(4) = 0;       % u velocity [m/s]
 X0(5) = 0;       % v velocity [m/s]
 X0(6) = 0;       % w velocity [m/s]
-X0(7) = 5*pi/180;       % roll angle [rad]
+X0(7) = 0*pi/180;       % roll angle [rad]
 X0(8) = 0*pi/180;       % pitch angle [rad]
 X0(9) = 0;       % yaw angle [rad]
 X0(10) = 0;      % roll rate [rad/s]

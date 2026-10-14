@@ -11,7 +11,9 @@
 % State: x = [x y z u v w phi theta psi p q r]'
 
 
-clc, clear all, close all
+clc
+% Preserve a firmware configuration edited in betaflightConfigurator.
+addpath(fullfile(fileparts(fileparts(mfilename('fullpath'))),'Betaflight'));
 %% ---------------- USER PARAMETERS (fill these in) ----------------
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,8 +57,8 @@ q_ref = 1.00;      % [rad/s]
 r_ref = 1.00;      % [rad/s]
 
 % Drag coefficient guesses (tunable knobs)
-CDx = 1.0;  CDy = 1.0;  CDz = 1.0;        % translational
-CDw = 1.0;                               % rotational (lumped)
+CDx = 1.0*0;  CDy = 1.0*0;  CDz = 1.0*0;        % translational
+CDw = 1.0*0;                               % rotational (lumped)
 
 % Effective projected areas (tunable knobs)
 Ax = 0.50*Aref;     % [m^2] effective frontal area in body x
@@ -73,7 +75,7 @@ yaw_row = k_tau * [ 1 -1 1 -1 ];   % 1x4
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set controller sample frequency
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fs = 4000; % sample frequency of Flight controller
+fs = 4000; % SITL sensor sampling; PID/mixer rate = fs / pid_process_denom
 Ts = 1/fs; %sample time
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -87,6 +89,10 @@ accel.BW = 740;               % [Hz]
 accel.LPF_set = 5;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 accel.alpha = 2*pi*accel.LPF_set*Ts/(1+2*pi*accel.LPF_set*Ts);  % Discrete LPF parameter
 accel.tau = 1/(2*pi*accel.BW); % [s]
+accel.sample_rate = 1600;      % [Hz] sensor output data rate
+accel.noise_density = 0.00016; % [g/sqrt(Hz)]
+accel.bias = 0.02*ones(3,1);   % [g] uncalibrated sensor offset
+accel.vibration = 0.1;        % [g] 24 Hz wing vibration amplitude
 %-----------------------GYRO DATA--------------------------------
 gyro.range = 1000;              % [dps] 
 gyro.resolution_bits = 16;      % [bits]
@@ -95,6 +101,10 @@ gyro.BW = 751;               % [Hz]
 gyro.LPF_set = 5;           % [Hz] % LPF setting!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 gyro.alpha = 2*pi*gyro.LPF_set*Ts/(1+2*pi*gyro.LPF_set*Ts);  % Discrete LPF parameter
 gyro.tau = 1/(2*pi*gyro.BW); % [s]
+gyro.sample_rate = 3200;       % [Hz] sensor output data rate
+gyro.noise_density = 0.007;    % [deg/s/sqrt(Hz)]
+gyro.bias = 0.5*ones(3,1);     % [deg/s] removed by native startup calibration
+gyro.vibration = 3.7;         % [deg/s] 24 Hz wing vibration amplitude
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -516,10 +526,22 @@ scaleGain = 1./Kdc;
 
 %% RUN SIMULATION
 sim_fidelity = 'high'; % high means model will run the non-linear dynamics
+imu_nonlinear = strcmp(sim_fidelity,'high'); % numeric parameter for the IMU chart
                        % low means model will run the linear dynamics
 
 
 t_sim = 10; % [sec] decide how long you want to simulate flight
+% The native firmware owns the PID, filters, estimator, modes and mixer.
+% Legacy roll_P/mahoney values above are retained for old run comparisons;
+% they do not configure Betaflight. All firmware settings live in bfConfig.
+if ~exist('bfConfig','var') || isempty(bfConfig)
+    bfConfig = bf.hoverConfig(max_pot);
+end
+bfSim = bf.simulationOptions(struct('Ts',Ts,'u0',u0,'X0',X0,'gyro',gyro,'accel',accel,'noise_true',noise_true,'g',g),bfConfig);
+% Set bfSim.CommandMode to 'rate' for Xref(10:12), or 'receiver' to supply
+% raw AETR/AUX channels. ANGLE uses Xref(7:8) and yaw rate Xref(12).
+bfRc = bf.receiverChannels(bfSim);
+% Edit and save settings with: betaflightConfigurator(bfConfig)
 simstruct = sim('lin_hover_sim.slx');
 
 

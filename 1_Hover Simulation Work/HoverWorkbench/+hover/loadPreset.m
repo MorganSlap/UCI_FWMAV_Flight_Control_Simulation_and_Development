@@ -12,7 +12,7 @@ if ~isstruct(payload) || ~isscalar(payload) || ...
     error('hover:InvalidPreset', ...
         'This file is not a supported Hover Workbench settings preset.');
 end
-settings = payload.Settings;
+settings = hover.upgradeSettings(payload.Settings);
 options = struct();
 if isfield(payload,'Options')
     if ~isstruct(payload.Options) || ~isscalar(payload.Options)

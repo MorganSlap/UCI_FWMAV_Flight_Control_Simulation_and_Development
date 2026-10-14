@@ -1,0 +1,1371 @@
+gyro_hardware_lpf = NORMAL
+Allowed values: NORMAL, OPTION_1, OPTION_2, EXPERIMENTAL
+
+gyro_lpf1_type = PT1
+Allowed values: PT1, BIQUAD, PT2, PT3
+
+gyro_lpf1_static_hz = 250
+Allowed range: 0 - 1000
+
+gyro_lpf2_type = PT1
+Allowed values: PT1, BIQUAD, PT2, PT3
+
+gyro_lpf2_static_hz = 500
+Allowed range: 0 - 1000
+
+gyro_notch1_hz = 0
+Allowed range: 0 - 1000
+
+gyro_notch1_cutoff = 0
+Allowed range: 0 - 1000
+
+gyro_notch2_hz = 0
+Allowed range: 0 - 1000
+
+gyro_notch2_cutoff = 0
+Allowed range: 0 - 1000
+
+gyro_calib_duration = 125
+Allowed range: 50 - 3000
+
+gyro_calib_noise_limit = 48
+Allowed range: 0 - 200
+
+gyro_offset_yaw = 0
+Allowed range: -1000 - 1000
+
+gyro_overflow_detect = ALL
+Allowed values: OFF, YAW, ALL
+
+yaw_spin_recovery = AUTO
+Allowed values: OFF, ON, AUTO
+
+yaw_spin_threshold = 1950
+Allowed range: 500 - 1950
+
+gyro_lpf1_dyn_min_hz = 250
+Allowed range: 0 - 1000
+
+gyro_lpf1_dyn_max_hz = 500
+Allowed range: 0 - 1000
+
+gyro_lpf1_dyn_expo = 5
+Allowed range: 0 - 10
+
+gyro_filter_debug_axis = ROLL
+Allowed values: ROLL, PITCH, YAW
+
+acc_hardware = AUTO
+Allowed values: AUTO, NONE, MPU6050, MPU6000, MPU6500, MPU9250, ICM20601, ICM20602, ICM20608G, ICM20649, ICM20689, ICM42605, ICM42688P, BMI160, BMI270, LSM6DSO, LSM6DSV16X, IIM42653, ICM45605, ICM45686, ICM40609D, IIM42652, LSM6DSK320X, ICM42622P, ICM42686P, ICM56686, BMI423, VIRTUAL, LSM6DSV32X
+
+acc_lpf_hz = 25
+Allowed range: 0 - 500
+
+acc_trim_pitch = 0
+Allowed range: -300 - 300
+
+acc_trim_roll = 0
+Allowed range: -300 - 300
+
+acc_calibration = 0,0,0,0
+Array length: 4
+
+align_mag = DEFAULT
+Allowed values: DEFAULT, CW0, CW90, CW180, CW270, CW0FLIP, CW90FLIP, CW180FLIP, CW270FLIP, CUSTOM
+
+mag_align_roll = 0
+Allowed range: -3600 - 3600
+
+mag_align_pitch = 0
+Allowed range: -3600 - 3600
+
+mag_align_yaw = 0
+Allowed range: -3600 - 3600
+
+mag_bustype = NONE
+Allowed values: NONE, I2C, SPI, SLAVE
+
+mag_i2c_device = 0
+Allowed range: 0 - 0
+
+mag_i2c_address = 0
+Allowed range: 0 - 119
+
+mag_spi_device = 0
+Allowed range: 0 - 0
+
+mag_hardware = AUTO
+Allowed values: AUTO, NONE, HMC5883, AK8975, AK8963, QMC5883L, LIS2MDL, LIS3MDL, MPU925X_AK8963, IST8310, MMC560X, QMC5883P, BMM350, AK9916
+
+mag_calibration = 0,0,0
+Array length: 3
+
+baro_bustype = NONE
+Allowed values: NONE, I2C, SPI, SLAVE
+
+baro_spi_device = 0
+Allowed range: 0 - 5
+
+baro_i2c_device = 0
+Allowed range: 0 - 5
+
+baro_i2c_address = 0
+Allowed range: 0 - 119
+
+baro_hardware = NONE
+Allowed values: AUTO, NONE, BMP085, MS5611, BMP280, LPS, QMP6988, BMP388, DPS310, 2SMPB_02B, LPS22DF, BMP580, BMP581, VIRTUAL, SPA06_003
+
+baro_drift = 0
+Allowed range: -500 - 500
+
+mid_rc = 1500
+Allowed range: 1200 - 1700
+
+min_check = 1050
+Allowed range: 750 - 2250
+
+max_check = 1900
+Allowed range: 750 - 2250
+
+rssi_channel = 0
+Allowed range: 0 - 18
+
+rssi_src_frame_errors = OFF
+Allowed values: OFF, ON
+
+rssi_scale = 100
+Allowed range: 1 - 255
+
+rssi_offset = 0
+Allowed range: -100 - 100
+
+rssi_invert = OFF
+Allowed values: OFF, ON
+
+rssi_src_frame_lpf_period = 30
+Allowed range: 0 - 255
+
+rssi_smoothing = 125
+Allowed range: 0 - 255
+
+rc_smoothing = ON
+Allowed values: OFF, ON
+
+rc_smoothing_auto_factor = 30
+Allowed range: 0 - 250
+
+rc_smoothing_auto_factor_throttle = 30
+Allowed range: 0 - 250
+
+rc_smoothing_setpoint_cutoff = 0
+Allowed range: 0 - 255
+
+rc_smoothing_throttle_cutoff = 0
+Allowed range: 0 - 255
+
+rc_smoothing_debug_axis = ROLL
+Allowed values: ROLL, PITCH, YAW, THROTTLE
+
+fpv_mix_degrees = 0
+Allowed range: 0 - 90
+
+max_aux_channels = 6
+Allowed range: 0 - 14
+
+airmode_start_throttle_percent = 25
+Allowed range: 0 - 100
+
+rx_min_usec = 885
+Allowed range: 750 - 2250
+
+rx_max_usec = 2115
+Allowed range: 750 - 2250
+
+serialrx_halfduplex = OFF
+Allowed values: OFF, ON
+
+rx_uart = NONE
+
+msp_override_channels_mask = 0
+Allowed range: 0 - 262143
+
+msp_override_failsafe = OFF
+Allowed values: OFF, ON
+
+blackbox_sample_rate = 1/4
+Allowed values: 1/1, 1/2, 1/4, 1/8, 1/16
+
+blackbox_device = NONE
+Allowed values: NONE, SPIFLASH, SDCARD, SERIAL, VIRTUAL
+
+blackbox_disable_pids = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_rc = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_setpoint = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_bat = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_mag = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_alt = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_rssi = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_gyro = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_gyrounfilt = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_acc = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_attitude = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_debug = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_motors = OFF
+Allowed values: OFF, ON
+
+blackbox_disable_gps = OFF
+Allowed values: OFF, ON
+
+blackbox_mode = NORMAL
+Allowed values: NORMAL, MOTOR_TEST, ALWAYS
+
+blackbox_high_resolution = OFF
+Allowed values: OFF, ON
+
+blackbox_uart = NONE
+
+blackbox_baud = 115200
+Allowed values: AUTO, 9600, 19200, 38400, 57600, 115200, 230400, 250000, 400000, 460800, 500000, 921600, 1000000, 1500000, 2000000, 2470000
+
+max_throttle = 2000
+Allowed range: 750 - 2250
+
+min_command = 1000
+Allowed range: 750 - 2250
+
+motor_kv = 1960
+Allowed range: 1 - 40000
+
+motor_idle = 550
+Allowed range: 0 - 2000
+
+use_unsynced_pwm = ON
+Allowed values: OFF, ON
+
+motor_pwm_protocol = PWM
+Allowed values: PWM, ONESHOT125, ONESHOT42, MULTISHOT, BRUSHED, DSHOT150, DSHOT300, DSHOT600, PROSHOT1000, DISABLED, DRONECAN
+
+motor_pwm_rate = 480
+Allowed range: 200 - 32000
+
+motor_pwm_inversion = OFF
+Allowed values: OFF, ON
+
+motor_poles = 14
+Allowed range: 4 - 255
+
+motor_output_reordering = 0,1,2,3,4,5,6,7
+Array length: 8
+
+thr_corr_value = 0
+Allowed range: 0 - 150
+
+thr_corr_angle = 800
+Allowed range: 1 - 900
+
+failsafe_delay = 15
+Allowed range: 1 - 200
+
+failsafe_landing_time = 60
+Allowed range: 0 - 250
+
+failsafe_throttle = 1000
+Allowed range: 750 - 2250
+
+failsafe_switch_mode = STAGE1
+Allowed values: STAGE1, KILL, STAGE2
+
+failsafe_throttle_low_delay = 100
+Allowed range: 0 - 300
+
+failsafe_procedure = DROP
+Allowed values: AUTO-LAND, DROP, GPS-RESCUE
+
+failsafe_recovery_delay = 5
+Allowed range: 1 - 200
+
+failsafe_stick_threshold = 30
+Allowed range: 0 - 50
+
+align_board_roll = 0
+Allowed range: -180 - 360
+
+align_board_pitch = 0
+Allowed range: -180 - 360
+
+align_board_yaw = 0
+Allowed range: -180 - 360
+
+battery_profile_name = -
+battery_profile 0
+String length: 1 - 8
+
+bat_capacity = 0
+battery_profile 0
+Allowed range: 0 - 20000
+
+vbat_max_cell_voltage = 430
+battery_profile 0
+Allowed range: 100 - 500
+
+vbat_full_cell_voltage = 410
+battery_profile 0
+Allowed range: 100 - 500
+
+vbat_min_cell_voltage = 330
+battery_profile 0
+Allowed range: 100 - 500
+
+vbat_warning_cell_voltage = 350
+battery_profile 0
+Allowed range: 100 - 500
+
+cbat_alert_percent = 10
+battery_profile 0
+Allowed range: 0 - 100
+
+force_battery_cell_count = 0
+battery_profile 0
+Allowed range: 0 - 24
+
+vbat_hysteresis = 1
+Allowed range: 0 - 250
+
+current_meter = VIRTUAL
+Allowed values: NONE, ADC, VIRTUAL, ESC, MSP
+
+battery_meter = NONE
+Allowed values: NONE, ADC, ESC
+
+vbat_detect_cell_voltage = 300
+Allowed range: 0 - 2000
+
+use_vbat_alerts = ON
+Allowed values: OFF, ON
+
+use_cbat_alerts = OFF
+Allowed values: OFF, ON
+
+vbat_cutoff_percent = 100
+Allowed range: 0 - 100
+
+vbat_display_lpf_period = 30
+Allowed range: 1 - 255
+
+vbat_sag_lpf_period = 2
+Allowed range: 1 - 255
+
+ibat_lpf_period = 10
+Allowed range: 0 - 255
+
+vbat_duration_for_warning = 0
+Allowed range: 0 - 150
+
+vbat_duration_for_critical = 0
+Allowed range: 0 - 150
+
+vbat_scale = 110
+Allowed range: 0 - 255
+
+vbat_divider = 10
+Allowed range: 1 - 255
+
+vbat_multiplier = 1
+Allowed range: 1 - 255
+
+ibata_scale = 400
+Allowed range: -16000 - 16000
+
+ibata_offset = 0
+Allowed range: -32000 - 32000
+
+ibatv_scale = 0
+Allowed range: -16000 - 16000
+
+ibatv_offset = 0
+Allowed range: 0 - 16000
+
+yaw_motors_reversed = OFF
+Allowed values: OFF, ON
+
+mixer_type = LEGACY
+Allowed values: LEGACY, LINEAR, DYNAMIC, EZLANDING
+
+crashflip_motor_percent = 0
+Allowed range: 0 - 100
+
+crashflip_rate = 0
+Allowed range: 0 - 250
+
+crashflip_auto_rearm = OFF
+Allowed values: OFF, ON
+
+3d_deadband_low = 1406
+Allowed range: 750 - 1500
+
+3d_deadband_high = 1514
+Allowed range: 1500 - 2250
+
+3d_neutral = 1460
+Allowed range: 750 - 2250
+
+3d_deadband_throttle = 50
+Allowed range: 1 - 100
+
+3d_limit_low = 1000
+Allowed range: 750 - 1500
+
+3d_limit_high = 2000
+Allowed range: 1500 - 2250
+
+3d_switched_mode = OFF
+Allowed values: OFF, ON
+
+rateprofile_name = -
+rateprofile 0
+String length: 1 - 8
+
+thr_mid = 50
+rateprofile 0
+Allowed range: 0 - 100
+
+thr_expo = 0
+rateprofile 0
+Allowed range: 0 - 100
+
+thr_hover = 50
+rateprofile 0
+Allowed range: 0 - 100
+
+rates_type = ACTUAL
+rateprofile 0
+Allowed values: BETAFLIGHT, RACEFLIGHT, KISS, ACTUAL, QUICK
+
+quickrates_rc_expo = OFF
+rateprofile 0
+Allowed values: OFF, ON
+
+roll_rc_rate = 7
+rateprofile 0
+Allowed range: 1 - 255
+
+pitch_rc_rate = 7
+rateprofile 0
+Allowed range: 1 - 255
+
+yaw_rc_rate = 7
+rateprofile 0
+Allowed range: 1 - 255
+
+roll_expo = 0
+rateprofile 0
+Allowed range: 0 - 100
+
+pitch_expo = 0
+rateprofile 0
+Allowed range: 0 - 100
+
+yaw_expo = 0
+rateprofile 0
+Allowed range: 0 - 100
+
+roll_srate = 67
+rateprofile 0
+Allowed range: 0 - 255
+
+pitch_srate = 67
+rateprofile 0
+Allowed range: 0 - 255
+
+yaw_srate = 67
+rateprofile 0
+Allowed range: 0 - 255
+
+throttle_limit_type = OFF
+rateprofile 0
+Allowed values: OFF, SCALE, CLIP
+
+throttle_limit_percent = 100
+rateprofile 0
+Allowed range: 25 - 100
+
+roll_rate_limit = 1998
+rateprofile 0
+Allowed range: 200 - 1998
+
+pitch_rate_limit = 1998
+rateprofile 0
+Allowed range: 200 - 1998
+
+yaw_rate_limit = 1998
+rateprofile 0
+Allowed range: 200 - 1998
+
+reboot_character = 82
+Allowed range: 48 - 126
+
+serial_update_rate_hz = 100
+Allowed range: 100 - 2000
+
+imu_dcm_kp = 2500
+Allowed range: 0 - 32000
+
+imu_dcm_ki = 0
+Allowed range: 0 - 32000
+
+small_angle = 25
+Allowed range: 0 - 180
+
+imu_process_denom = 2
+Allowed range: 1 - 4
+
+mag_declination = 0
+Allowed range: -300 - 300
+
+auto_disarm_delay = 5
+Allowed range: 0 - 60
+
+gyro_cal_on_first_arm = OFF
+Allowed values: OFF, ON
+
+prearm_allow_rearm = OFF
+Allowed values: OFF, ON
+
+gps_provider = VIRTUAL
+Allowed values: NMEA, UBLOX, MSP, VIRTUAL
+
+gps_sbas_mode = NONE
+Allowed values: AUTO, EGNOS, WAAS, MSAS, GAGAN, NONE
+
+gps_auto_config = ON
+Allowed values: OFF, ON
+
+gps_auto_baud = OFF
+Allowed values: OFF, ON
+
+gps_ublox_acquire_model = STATIONARY
+Allowed values: PORTABLE, STATIONARY, PEDESTRIAN, AUTOMOTIVE, AT_SEA, AIRBORNE_1G, AIRBORNE_2G, AIRBORNE_4G
+
+gps_ublox_flight_model = AIRBORNE_4G
+Allowed values: PORTABLE, STATIONARY, PEDESTRIAN, AUTOMOTIVE, AT_SEA, AIRBORNE_1G, AIRBORNE_2G, AIRBORNE_4G
+
+gps_update_rate_hz = 10
+Allowed range: 1 - 20
+
+gps_ublox_utc_standard = AUTO
+Allowed values: AUTO, USNO, EU, SU, NTSC
+
+gps_ublox_use_galileo = OFF
+Allowed values: OFF, ON
+
+gps_ublox_enable_ana = OFF
+Allowed values: OFF, ON
+
+gps_set_home_point_once = OFF
+Allowed values: OFF, ON
+
+gps_use_3d_speed = OFF
+Allowed values: OFF, ON
+
+gps_sbas_integrity = OFF
+Allowed values: OFF, ON
+
+gps_nmea_custom_commands = -
+String length: 1 - 64
+
+gps_uart = NONE
+
+gps_baud = 57600
+Allowed values: AUTO, 9600, 19200, 38400, 57600, 115200, 230400, 250000, 400000, 460800, 500000, 921600, 1000000, 1500000, 2000000, 2470000
+
+gps_rescue_min_start_dist = 15
+Allowed range: 5 - 30
+
+gps_rescue_alt_mode = MAX_ALT
+Allowed values: MAX_ALT, FIXED_ALT, CURRENT_ALT
+
+gps_rescue_initial_climb = 10
+Allowed range: 0 - 100
+
+gps_rescue_ascend_rate = 750
+Allowed range: 50 - 2500
+
+gps_rescue_return_alt = 30
+Allowed range: 5 - 1000
+
+gps_rescue_ground_speed = 750
+Allowed range: 0 - 3000
+
+gps_rescue_descent_dist = 20
+Allowed range: 5 - 500
+
+gps_rescue_descend_rate = 150
+Allowed range: 25 - 500
+
+gps_rescue_sanity_checks = RESCUE_SANITY_FS_ONLY
+Allowed values: RESCUE_SANITY_OFF, RESCUE_SANITY_ON, RESCUE_SANITY_FS_ONLY
+
+gps_rescue_min_sats = 8
+Allowed range: 5 - 50
+
+gps_rescue_allow_arming_without_fix = OFF
+Allowed values: OFF, ON
+
+gps_rescue_yaw_p = 20
+Allowed range: 0 - 200
+
+deadband = 0
+Allowed range: 0 - 32
+
+yaw_deadband = 0
+Allowed range: 0 - 100
+
+yaw_control_reversed = OFF
+Allowed values: OFF, ON
+
+alt_hold_climb_rate = 50
+Allowed range: 0 - 200
+
+alt_hold_deadband = 20
+Allowed range: 0 - 70
+
+pos_hold_deadband = 5
+Allowed range: 0 - 50
+
+poshold_position_source = AUTO
+Allowed values: AUTO, GPS_ONLY, OPTICALFLOW_ONLY
+
+poshold_opticalflow_quality_min = 30
+Allowed range: 0 - 100
+
+poshold_opticalflow_max_range = 400
+Allowed range: 50 - 1000
+
+pid_process_denom = 1
+Allowed range: 1 - 16
+
+runaway_takeoff_prevention = ON
+Allowed values: OFF, ON
+
+runaway_takeoff_deactivate_delay = 500
+Allowed range: 100 - 1000
+
+runaway_takeoff_deactivate_throttle_percent = 20
+Allowed range: 0 - 100
+
+profile_name = -
+profile 0
+String length: 1 - 8
+
+dterm_lpf1_dyn_min_hz = 75
+profile 0
+Allowed range: 0 - 1000
+
+dterm_lpf1_dyn_max_hz = 150
+profile 0
+Allowed range: 0 - 1000
+
+dterm_lpf1_dyn_expo = 5
+profile 0
+Allowed range: 0 - 10
+
+dterm_lpf1_type = PT1
+profile 0
+Allowed values: PT1, BIQUAD, PT2, PT3
+
+dterm_lpf1_static_hz = 75
+profile 0
+Allowed range: 0 - 1000
+
+dterm_lpf2_type = PT1
+profile 0
+Allowed values: PT1, BIQUAD, PT2, PT3
+
+dterm_lpf2_static_hz = 150
+profile 0
+Allowed range: 0 - 1000
+
+dterm_notch_hz = 0
+profile 0
+Allowed range: 0 - 1000
+
+dterm_notch_cutoff = 0
+profile 0
+Allowed range: 0 - 1000
+
+vbat_sag_compensation = 0
+profile 0
+Allowed range: 0 - 150
+
+pid_at_min_throttle = ON
+profile 0
+Allowed values: OFF, ON
+
+anti_gravity_gain = 80
+profile 0
+Allowed range: 0 - 250
+
+anti_gravity_cutoff_hz = 5
+profile 0
+Allowed range: 2 - 50
+
+anti_gravity_p_gain = 100
+profile 0
+Allowed range: 0 - 250
+
+acc_limit_yaw = 0
+profile 0
+Allowed range: 0 - 500
+
+acc_limit = 0
+profile 0
+Allowed range: 0 - 500
+
+crash_dthreshold = 50
+profile 0
+Allowed range: 10 - 2000
+
+crash_gthreshold = 400
+profile 0
+Allowed range: 100 - 2000
+
+crash_setpoint_threshold = 350
+profile 0
+Allowed range: 50 - 2000
+
+crash_time = 500
+profile 0
+Allowed range: 100 - 5000
+
+crash_delay = 0
+profile 0
+Allowed range: 0 - 500
+
+crash_recovery_angle = 10
+profile 0
+Allowed range: 5 - 30
+
+crash_recovery_rate = 100
+profile 0
+Allowed range: 50 - 255
+
+crash_limit_yaw = 200
+profile 0
+Allowed range: 0 - 1000
+
+crash_recovery = OFF
+profile 0
+Allowed values: OFF, ON, BEEP, DISARM
+
+iterm_rotation = OFF
+profile 0
+Allowed values: OFF, ON
+
+iterm_relax = RP
+profile 0
+Allowed values: OFF, RP, RPY, RP_INC, RPY_INC
+
+iterm_relax_type = SETPOINT
+profile 0
+Allowed values: GYRO, SETPOINT
+
+iterm_relax_cutoff = 15
+profile 0
+Allowed range: 1 - 50
+
+iterm_windup = 80
+profile 0
+Allowed range: 20 - 100
+
+pidsum_limit = 500
+profile 0
+Allowed range: 100 - 1000
+
+pidsum_limit_yaw = 400
+profile 0
+Allowed range: 100 - 1000
+
+yaw_lowpass_hz = 100
+profile 0
+Allowed range: 0 - 500
+
+throttle_boost = 5
+profile 0
+Allowed range: 0 - 100
+
+throttle_boost_cutoff = 15
+profile 0
+Allowed range: 5 - 50
+
+p_pitch = 47
+profile 0
+Allowed range: 0 - 250
+
+i_pitch = 84
+profile 0
+Allowed range: 0 - 250
+
+d_pitch = 34
+profile 0
+Allowed range: 0 - 250
+
+f_pitch = 125
+profile 0
+Allowed range: 0 - 1000
+
+p_roll = 45
+profile 0
+Allowed range: 0 - 250
+
+i_roll = 80
+profile 0
+Allowed range: 0 - 250
+
+d_roll = 30
+profile 0
+Allowed range: 0 - 250
+
+f_roll = 120
+profile 0
+Allowed range: 0 - 1000
+
+p_yaw = 45
+profile 0
+Allowed range: 0 - 250
+
+i_yaw = 80
+profile 0
+Allowed range: 0 - 250
+
+d_yaw = 0
+profile 0
+Allowed range: 0 - 250
+
+f_yaw = 120
+profile 0
+Allowed range: 0 - 1000
+
+angle_p_gain = 50
+profile 0
+Allowed range: 0 - 200
+
+angle_feedforward = 50
+profile 0
+Allowed range: 0 - 200
+
+angle_feedforward_smoothing_ms = 80
+profile 0
+Allowed range: 10 - 250
+
+angle_limit = 60
+profile 0
+Allowed range: 10 - 80
+
+angle_earth_ref = 100
+profile 0
+Allowed range: 0 - 100
+
+horizon_level_strength = 75
+profile 0
+Allowed range: 0 - 100
+
+horizon_limit_sticks = 75
+profile 0
+Allowed range: 10 - 200
+
+horizon_limit_degrees = 135
+profile 0
+Allowed range: 10 - 250
+
+horizon_ignore_sticks = OFF
+profile 0
+Allowed values: OFF, ON
+
+horizon_delay_ms = 500
+profile 0
+Allowed range: 10 - 5000
+
+d_max_roll = 40
+profile 0
+Allowed range: 0 - 250
+
+d_max_pitch = 46
+profile 0
+Allowed range: 0 - 250
+
+d_max_yaw = 0
+profile 0
+Allowed range: 0 - 250
+
+d_max_gain = 0
+profile 0
+Allowed range: 0 - 100
+
+d_max_advance = 35
+profile 0
+Allowed range: 0 - 200
+
+motor_output_limit = 100
+profile 0
+Allowed range: 1 - 100
+
+auto_profile_cell_count = 0
+profile 0
+Allowed range: -1 - 8
+
+launch_control_mode = PITCHONLY
+profile 0
+Allowed values: NORMAL, PITCHONLY, FULL
+
+launch_trigger_allow_reset = ON
+profile 0
+Allowed values: OFF, ON
+
+launch_trigger_throttle_percent = 20
+profile 0
+Allowed range: 0 - 90
+
+launch_angle_limit = 0
+profile 0
+Allowed range: 0 - 80
+
+launch_control_gain = 40
+profile 0
+Allowed range: 0 - 200
+
+thrust_linear = 0
+profile 0
+Allowed range: 0 - 150
+
+feedforward_transition = 0
+profile 0
+Allowed range: 0 - 100
+
+feedforward_averaging = 2_POINT
+profile 0
+Allowed values: OFF, 2_POINT, 3_POINT, 4_POINT
+
+feedforward_smooth_factor = 65
+profile 0
+Allowed range: 0 - 95
+
+feedforward_jitter_factor = 7
+profile 0
+Allowed range: 0 - 20
+
+feedforward_boost = 15
+profile 0
+Allowed range: 0 - 50
+
+feedforward_max_rate_limit = 90
+profile 0
+Allowed range: 0 - 200
+
+feedforward_yaw_hold_gain = 15
+profile 0
+Allowed range: 0 - 100
+
+feedforward_yaw_hold_time = 100
+profile 0
+Allowed range: 10 - 250
+
+level_race_mode = OFF
+profile 0
+Allowed values: OFF, ON
+
+simplified_pids_mode = RPY
+profile 0
+Allowed values: OFF, RP, RPY
+
+simplified_master_multiplier = 100
+profile 0
+Allowed range: 0 - 200
+
+simplified_i_gain = 100
+profile 0
+Allowed range: 0 - 200
+
+simplified_d_gain = 100
+profile 0
+Allowed range: 0 - 200
+
+simplified_pi_gain = 100
+profile 0
+Allowed range: 0 - 200
+
+simplified_d_max_gain = 100
+profile 0
+Allowed range: 0 - 200
+
+simplified_feedforward_gain = 100
+profile 0
+Allowed range: 0 - 200
+
+simplified_pitch_d_gain = 100
+profile 0
+Allowed range: 0 - 200
+
+simplified_pitch_pi_gain = 100
+profile 0
+Allowed range: 0 - 200
+
+simplified_dterm_filter = ON
+profile 0
+Allowed values: OFF, ON
+
+simplified_dterm_filter_multiplier = 100
+profile 0
+Allowed range: 10 - 200
+
+simplified_gyro_filter = ON
+Allowed values: OFF, ON
+
+simplified_gyro_filter_multiplier = 100
+Allowed range: 10 - 200
+
+tpa_mode = D
+profile 0
+Allowed values: PD, D
+
+tpa_rate = 65
+profile 0
+Allowed range: 0 - 100
+
+tpa_breakpoint = 1350
+profile 0
+Allowed range: 1000 - 2000
+
+tpa_low_rate = 20
+profile 0
+Allowed range: 0 - 100
+
+tpa_low_breakpoint = 1050
+profile 0
+Allowed range: 1000 - 2000
+
+tpa_low_always = OFF
+profile 0
+Allowed values: OFF, ON
+
+ez_landing_threshold = 25
+profile 0
+Allowed range: 0 - 200
+
+ez_landing_limit = 15
+profile 0
+Allowed range: 0 - 75
+
+ez_landing_speed = 50
+profile 0
+Allowed range: 0 - 250
+
+landing_disarm_threshold = 0
+profile 0
+Allowed range: 0 - 250
+
+task_statistics = ON
+Allowed values: OFF, ON
+
+debug_mode = NONE
+Allowed values: NONE, CYCLETIME, BATTERY, GYRO_FILTERED, ACCELEROMETER, PIDLOOP, RC_INTERPOLATION, ANGLERATE, ESC_SENSOR, SCHEDULER, STACK, ESC_SENSOR_RPM, ESC_SENSOR_TMP, ALTITUDE, FFT, FFT_TIME, FFT_FREQ, RX_FRSKY_SPI, RX_SFHSS_SPI, GYRO_RAW, MULTI_GYRO_RAW, MULTI_GYRO_DIFF, MAX7456_SIGNAL, MAX7456_SPICLOCK, SBUS, FPORT, RANGEFINDER, RANGEFINDER_QUALITY, OPTICALFLOW, LIDAR_TF, ADC_INTERNAL, RUNAWAY_TAKEOFF, SDIO, CURRENT_SENSOR, USB, SMARTAUDIO, RTH, ITERM_RELAX, ACRO_TRAINER, RC_SMOOTHING, RX_SIGNAL_LOSS, RC_SMOOTHING_RATE, ANTI_GRAVITY, DYN_LPF, RX_SPEKTRUM_SPI, DSHOT_RPM_TELEMETRY, RPM_FILTER, D_MAX, AC_CORRECTION, AC_ERROR, MULTI_GYRO_SCALED, DSHOT_RPM_ERRORS, CRSF_LINK_STATISTICS_UPLINK, CRSF_LINK_STATISTICS_PWR, CRSF_LINK_STATISTICS_DOWN, BARO, AUTOPILOT_ALTITUDE, DYN_IDLE, FEEDFORWARD_LIMIT, FEEDFORWARD, BLACKBOX_OUTPUT, GYRO_SAMPLE, RX_TIMING, D_LPF, VTX_TRAMP, GHST, GHST_MSP, SCHEDULER_DETERMINISM, TIMING_ACCURACY, RX_EXPRESSLRS_SPI, RX_EXPRESSLRS_PHASELOCK, RX_STATE_TIME, GPS_RESCUE_VELOCITY, GPS_RESCUE_HEADING, GPS_RESCUE_TRACKING, GPS_CONNECTION, ATTITUDE, VTX_MSP, GPS_DOP, FAILSAFE, GYRO_CALIBRATION, ANGLE_MODE, ANGLE_TARGET, CURRENT_ANGLE, DSHOT_TELEMETRY_COUNTS, RPM_LIMIT, RC_STATS, MAG_CALIB, MAG_TASK_RATE, EZLANDING, TPA, S_TERM, SPA, TASK, GIMBAL, WING_SETPOINT, CHIRP, FLASH_TEST_PRBS, MAVLINK_TELEMETRY, AUTOPILOT_PID, POSITION_NAV, AUTOPILOT_STOP, PITOT, POSITION_EST, AUTOPILOT_HEADING, RX_REDPINE_SPI, LAUNCH, VELOCITY_EST, SAG_COMPENSATION, UPT1, FLIGHT_PLAN, AUTOPILOT_CLIMB, AUTOPILOT_GUIDANCE, AUTOPILOT_LANDING
+
+rate_6pos_switch = OFF
+Allowed values: OFF, ON
+
+pwr_on_arm_grace = 5
+Allowed range: 0 - 30
+
+enable_stick_arming = OFF
+Allowed values: OFF, ON
+
+rcdevice_init_dev_attempts = 6
+Allowed range: 0 - 10
+
+rcdevice_init_dev_attempt_interval = 1000
+Allowed range: 0 - 5000
+
+rcdevice_protocol_version = 0
+Allowed range: 0 - 1
+
+rcdevice_feature = 0
+Allowed range: 0 - 65535
+
+rcdevice_uart = NONE
+
+gyro_1_bustype = NONE
+Allowed values: NONE, I2C, SPI, SLAVE
+
+gyro_1_spibus = 0
+Allowed range: 0 - 0
+
+gyro_1_i2cBus = 0
+Allowed range: 0 - 0
+
+gyro_1_i2c_address = 0
+Allowed range: 0 - 119
+
+scheduler_relax_rx = 25
+Allowed range: 0 - 500
+
+scheduler_relax_osd = 25
+Allowed range: 0 - 500
+
+scheduler_debug_task = 0
+Allowed range: 0 - 22
+
+serialmsp_halfduplex = OFF
+Allowed values: OFF, ON
+
+msp_1_uart = UART1
+
+msp_1_baud = 115200
+Allowed values: AUTO, 9600, 19200, 38400, 57600, 115200, 230400, 250000, 400000, 460800, 500000, 921600, 1000000, 1500000, 2000000, 2470000
+
+msp_2_uart = NONE
+
+msp_2_baud = 115200
+Allowed values: AUTO, 9600, 19200, 38400, 57600, 115200, 230400, 250000, 400000, 460800, 500000, 921600, 1000000, 1500000, 2000000, 2470000
+
+msp_3_uart = NONE
+
+msp_3_baud = 115200
+Allowed values: AUTO, 9600, 19200, 38400, 57600, 115200, 230400, 250000, 400000, 460800, 500000, 921600, 1000000, 1500000, 2000000, 2470000
+
+timezone_offset_minutes = 0
+Allowed range: -780 - 780
+
+stats_min_armed_time_s = -1
+Allowed range: -1 - 127
+
+stats_total_flights = 0
+Allowed range: 0 - 4294967295
+
+stats_total_time_s = 0
+Allowed range: 0 - 4294967295
+
+stats_total_dist_m = 0
+Allowed range: 0 - 4294967295
+
+stats_save_move_limit = 20
+Allowed range: 0 - 255
+
+craft_name = -
+String length: 1 - 16
+
+altitude_source = DEFAULT
+Allowed values: DEFAULT, BARO_ONLY, GPS_ONLY, RANGEFINDER_PREFER, RANGEFINDER_ONLY
+
+altitude_prefer_baro = 50
+Allowed range: 0 - 100
+
+altitude_lpf = 300
+Allowed range: 10 - 5000
+
+rangefinder_max_range_cm = 400
+Allowed range: 50 - 1000
+
+altitude_d_lpf = 300
+Allowed range: 10 - 5000
+
+ap_landing_altitude_m = 4
+Allowed range: 0 - 200
+
+ap_hover_throttle = 1275
+Allowed range: 0 - 1700
+
+ap_throttle_min = 1100
+Allowed range: 1050 - 1400
+
+ap_throttle_max = 1900
+Allowed range: 1400 - 2000
+
+ap_altitude_p = 30
+Allowed range: 0 - 200
+
+ap_altitude_i = 30
+Allowed range: 0 - 200
+
+ap_altitude_d = 30
+Allowed range: 0 - 200
+
+ap_altitude_a = 30
+Allowed range: 0 - 200
+
+ap_altitude_f = 30
+Allowed range: 0 - 200
+
+ap_position_p = 30
+Allowed range: 0 - 200
+
+ap_position_i = 30
+Allowed range: 0 - 200
+
+ap_position_d = 30
+Allowed range: 0 - 200
+
+ap_position_a = 30
+Allowed range: 0 - 200
+
+ap_position_f = 30
+Allowed range: 0 - 200
+
+ap_position_cutoff = 30
+Allowed range: 10 - 50
+
+ap_stop_threshold = 10
+Allowed range: 5 - 50
+
+ap_max_angle = 50
+Allowed range: 10 - 70
+
+ap_max_yaw_rate = 150
+Allowed range: 10 - 250
+
+ap_yaw_p = 30
+Allowed range: 0 - 200
+
+ap_velocity_drag_coeff = 50
+Allowed range: 0 - 100
+
+ap_max_velocity = 500
+Allowed range: 100 - 5000
+
+ap_waypoint_arrival_radius = 500
+Allowed range: 100 - 5000
+
+ap_waypoint_hold_radius = 200
+Allowed range: 50 - 1000
+
+ap_stick_deadband = 50
+Allowed range: 0 - 500
+
+ap_throttle_deadband = 50
+Allowed range: 0 - 500
+
+ap_yaw_mode = VELOCITY
+Allowed values: VELOCITY, BEARING, HYBRID, FIXED, DAMPENER
+
+ap_min_forward_velocity = 300
+Allowed range: 10 - 500
+
+ap_nav_corner_speed = 220
+Allowed range: 50 - 2000
+
+ap_nav_corner_delta_v = 440
+Allowed range: 100 - 4000
+
+ap_nav_decel = 250
+Allowed range: 20 - 1000
+
+ap_nav_accel = 250
+Allowed range: 20 - 1000
+
+ap_nav_carrot_lead_time = 12
+Allowed range: 2 - 40
+
+ap_nav_carrot_lead_max = 2500
+Allowed range: 600 - 6000
+
+ap_nav_preturn_dist = 1500
+Allowed range: 500 - 5000
+
+ap_velocity_buildup_max_pitch = 8
+Allowed range: 0 - 20
+
+ap_max_turn_rate = 3
+Allowed range: 1 - 90
+
+ap_hold_orbit_radius = 1000
+Allowed range: 300 - 5000
+
+ap_hold_figure8_width = 2000
+Allowed range: 500 - 10000
+
+ap_landing_descent_rate = 50
+Allowed range: 10 - 200
+
+ap_landing_detection_time = 10
+Allowed range: 5 - 50
+
+ap_landing_spiral_enable = ON
+Allowed values: OFF, ON
+
+ap_landing_spiral_radius = 200
+Allowed range: 50 - 2000
+
+ap_landing_spiral_rate = 10
+Allowed range: 1 - 45
+
+ap_landing_velocity_threshold = 50
+Allowed range: 10 - 200
+
+ap_landing_throttle_threshold = 100
+Allowed range: 10 - 500
+
+ap_l1_enable = ON
+Allowed values: OFF, ON
+
+ap_l1_period = 20
+Allowed range: 5 - 100
+
+ap_l1_min_lookahead = 1000
+Allowed range: 100 - 5000
+
+ap_l1_max_lookahead = 10000
+Allowed range: 1000 - 50000
+
+ap_l1_max_cross_track_error = 10000
+Allowed range: 1000 - 50000
+
+ap_l1_turn_rate = 8
+Allowed range: 0 - 90
+
+ap_min_nav_altitude_m = 5
+Allowed range: 0 - 50
+
+ap_rx_loss_policy = DISABLE
+Allowed values: DISABLE, CONTINUE, LAND
+
+ap_max_distance_from_home = 0
+Allowed range: 0 - 10000
+
+ap_geofence_action = LAND
+Allowed values: LAND, RTH
+
+box_user_1_name = -
+String length: 1 - 16
+
+box_user_2_name = -
+String length: 1 - 16
+
+box_user_3_name = -
+String length: 1 - 16
+
+box_user_4_name = -
+String length: 1 - 16
+
+

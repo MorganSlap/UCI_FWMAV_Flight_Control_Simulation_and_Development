@@ -1,0 +1,6 @@
+function tokens = theme()
+%THEME Centralized Betaflight-style brand accents; surfaces use native theme.
+tokens=struct('primary',[1 0.78 0.05],'onPrimary',[0.08 0.08 0.08], ...
+    'secondary',[0.93 0.93 0.93],'error',[1 0.35 0.32], ...
+    'success',[0.35 0.78 0.42],'warning',[1 0.78 0.05]);
+end

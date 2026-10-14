@@ -1,0 +1,9 @@
+{
+  "Repository": "https://github.com/betaflight/betaflight",
+  "Commit": "c78d9e7bd24ef60f4324dffde11df26c53d4f29f",
+  "Target": "SITL",
+  "Version": "2026.12.0-alpha",
+  "HostProtocol": 1,
+  "GyroRateHz": 4000,
+  "Compiler": "Cygwin GCC 13.5.0"
+}

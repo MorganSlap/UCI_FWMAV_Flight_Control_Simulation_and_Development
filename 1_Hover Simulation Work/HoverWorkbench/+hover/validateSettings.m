@@ -35,13 +35,14 @@ for k = 1:numel(schema)
 end
 
 positive = {'m','S','wing_type','C11','g','rho','fs','t_sim','tau_wing', ...
-    'tau_p','tau_q','tau_r','accel.range','accel.BW','gyro.range','gyro.BW'};
+    'tau_p','tau_q','tau_r','accel.range','accel.BW','gyro.range','gyro.BW','accel.sample_rate','gyro.sample_rate'};
 for key = positive
     checkBound(key{1},0,Inf,false);
 end
 nonnegative = {'CDx','CDy','CDz','CDw','v_ref','w_ref','p_ref','q_ref','r_ref', ...
     'AxFactor','AyFactor','AzFactor','AomegaFactor', ...
-    'accel.LPF_set','gyro.LPF_set','mahoney.Kp','mahoney.Ki'};
+    'accel.LPF_set','gyro.LPF_set','mahoney.Kp','mahoney.Ki', ...
+    'accel.noise_density','gyro.noise_density','accel.vibration','gyro.vibration'};
 for key = nonnegative
     checkBound(key{1},0,Inf,true);
 end
@@ -68,7 +69,7 @@ if notPositiveDefinite
 end
 
 if ~settings.noise_true
-    notices(end+1) = "Noise is off: effective Mahoney Kp=0.25 and Ki=0, as in lin_hover.m.";
+    notices(end+1) = "Noise is off. Configure the native estimator gains in Betaflight Configurator.";
 end
 if settings.k_tau == 0
     notices(end+1) = "Yaw effectiveness is zero; the model has no yaw control authority.";
@@ -78,7 +79,7 @@ if trim > settings.max_pot || trim < 1000
     notices(end+1) = sprintf('Calculated hover trim %.4g lies outside [1000, max_pot].',trim);
 end
 if settings.accel.LPF_set >= settings.fs/2 || settings.gyro.LPF_set >= settings.fs/2
-    notices(end+1) = "A sensor LPF cutoff is at or above the controller Nyquist frequency.";
+    notices(end+1) = "A sensor LPF cutoff is at or above the sensor sampling Nyquist frequency.";
 end
 if settings.accel.LPF_set == 0 || settings.gyro.LPF_set == 0
     notices(end+1) = "A sensor LPF cutoff is zero; its alpha becomes zero and the filter holds its previous value.";

@@ -38,6 +38,10 @@ end
 % keep their original fields and files; loadRun still accepts them unchanged.
 sourceCopyFields = intersect(fieldnames(metadata), {'SourceSnapshots','SourceScript'});
 if ~isempty(sourceCopyFields), metadata = rmfield(metadata, sourceCopyFields); end
+if isfield(variables,'bfConfig')
+    metadata.Firmware=variables.bfConfig.Firmware;
+    metadata.FirmwareBinarySHA256=hover.fileHash(bf.paths().Binary);
+end
 record = struct('SchemaVersion', 1, 'ID', id, 'Label', label, ...
     'Created', created, 'Folder', char(finalFolder), 'Settings', settings, ...
     'Variables', variables, 'Signals', signals, 'Output', simOut, ...

@@ -6,6 +6,7 @@ end
 function setupOnce(testCase)
 workbenchFolder = fileparts(fileparts(mfilename('fullpath')));
 testCase.applyFixture(matlab.unittest.fixtures.PathFixture(workbenchFolder));
+testCase.applyFixture(matlab.unittest.fixtures.PathFixture(fullfile(fileparts(fileparts(workbenchFolder)),'Betaflight')));
 testCase.TestData.WorkbenchFolder = workbenchFolder;
 testCase.TestData.ScriptPath = fullfile(fileparts(workbenchFolder),'lin_hover.m');
 end
@@ -18,23 +19,63 @@ actual = hover.buildVariables(hover.defaultSettings());
 verifyStructFields(testCase,actual,expected,'variables');
 end
 
-function testControllerFrequencyRecomputesSensorCoefficients(testCase)
+function testOlderPresetGetsOnlyNewSensorDefaults(testCase)
+settings=hover.defaultSettings();
+settings.gyro=rmfield(settings.gyro,{'sample_rate','noise_density','bias','vibration'});
+settings.accel=rmfield(settings.accel,{'sample_rate','noise_density','bias','vibration'});
+settings.m=0.12;
+v=hover.buildVariables(settings);
+testCase.verifyEqual(v.m,0.12);
+testCase.verifyEqual(v.gyro.bias,0.5*ones(3,1));
+testCase.verifyEqual(v.accel.sample_rate,1600);
+settings=rmfield(settings,'S');
+testCase.verifyError(@()hover.buildVariables(settings),'hover:MissingSetting');
+end
+
+function testHoverExampleHasNoNavigationFeedback(testCase)
+v=hover.buildVariables(hover.hoverExample());
+testCase.verifyEqual(v.bfSim.NavigationSensors,0);
+testCase.verifyEqual(v.bfSim.ThrottlePWM,1859);
+testCase.verifyEqual(v.X0,zeros(12,1));
+testCase.verifyEqual(v.Xref,zeros(12,1));
+    testCase.verifyEqual(v.noise_true,1);
+    testCase.verifyEqual(v.bfSim.CalibrationGyro,0.5*pi/180*ones(3,1),'AbsTol',1e-14);
+end
+
+function testExampleCalibrationTracksNoiseSwitch(testCase)
+settings=hover.hoverExample();
+v=hover.buildVariables(settings);
+schema=bf.parseCliSettings(v.bfConfig.SchemaText);
+item=schema(strcmp({schema.Name},'acc_calibration'));
+testCase.verifyEqual(sscanf(strrep(bf.settingValue(v.bfConfig.CLI,item,0),',',' '),'%d'),[-5;-5;-5;1]);
+settings.noise_true=false; v=hover.buildVariables(settings);
+testCase.verifyEqual(sscanf(strrep(bf.settingValue(v.bfConfig.CLI,item,0),',',' '),'%d'),[0;0;0;1]);
+settings.FirmwareAdapter.UseKnownAccelCalibration=false;
+settings.Betaflight=bf.setSetting(settings.Betaflight,item,'3,4,5,1',0);
+v=hover.buildVariables(settings);
+testCase.verifyEqual(sscanf(strrep(bf.settingValue(v.bfConfig.CLI,item,0),',',' '),'%d'),[3;4;5;1]);
+end
+
+function testPidFrequencyPreservesSensorCoefficients(testCase)
 settings = hover.defaultSettings();
-settings.fs = 2000;
+schema=bf.parseCliSettings(settings.Betaflight.SchemaText);
+settings.Betaflight=bf.setSetting(settings.Betaflight,schema(strcmp({schema.Name},'pid_process_denom')),'2');
 settings.accel.LPF_set = 11;
 settings.gyro.LPF_set = 17;
 
 variables = hover.buildVariables(settings);
 
-testCase.verifyEqual(variables.Ts,0.0005,AbsTol=1e-15);
+testCase.verifyEqual(variables.Ts,0.00025,AbsTol=1e-15);
+testCase.verifyEqual(variables.bfSim.PidSampleTime,0.0005,AbsTol=1e-15);
 testCase.verifyEqual(variables.accel.alpha, ...
-    (2*pi*11/2000)/(1+2*pi*11/2000),AbsTol=1e-14);
+    (2*pi*11/4000)/(1+2*pi*11/4000),AbsTol=1e-14);
 testCase.verifyEqual(variables.gyro.alpha, ...
-    (2*pi*17/2000)/(1+2*pi*17/2000),AbsTol=1e-14);
+    (2*pi*17/4000)/(1+2*pi*17/4000),AbsTol=1e-14);
 end
 
 function testWingAreaChangeReachesDampingAndDynamics(testCase)
 settings = hover.defaultSettings();
+settings.CDx=1; settings.CDy=1; settings.CDz=1; settings.CDw=1;
 baseline = hover.buildVariables(settings);
 settings.wing_type = 2*settings.wing_type;
 
@@ -113,7 +154,8 @@ function testPresetRoundTripPreservesCustomMatricesAndNestedSettings(testCase)
 folder = temporaryFolder(testCase);
 filename = fullfile(folder,'custom.json');
 settings = hover.defaultSettings();
-settings.fs = 3200;
+schema=bf.parseCliSettings(settings.Betaflight.SchemaText);
+settings.Betaflight=bf.setSetting(settings.Betaflight,schema(strcmp({schema.Name},'pid_process_denom')),'8');
 settings.I(1,2) = 1e-5;
 settings.I(2,1) = 1e-5;
 settings.X0 = (1:12).'/100;
@@ -332,6 +374,7 @@ assert(~isempty(test_stop),'hover:TestScriptBoundary', ...
 test_source = test_source(1:test_stop-1);
 test_source = regexprep(test_source, ...
     '(?m)^clc,\s*clear all,\s*close all[^\r\n]*','');
+test_source = regexprep(test_source,'(?m)^(clc|addpath\()[^\r\n]*','');
 test_capture = evalc(test_source); %#ok<NASGU>
 test_names = who;
 test_names = test_names(~startsWith(test_names,'test_'));
@@ -343,6 +386,10 @@ end
 
 function verifyStructFields(testCase,actual,expected,label)
 names = fieldnames(expected);
+if isempty(names)
+    testCase.verifyEmpty(fieldnames(actual));
+    return
+end
 testCase.assertTrue(all(isfield(actual,names)), ...
     sprintf('%s is missing expected fields.',label));
 for k = 1:numel(names)

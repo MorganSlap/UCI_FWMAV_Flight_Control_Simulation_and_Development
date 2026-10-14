@@ -5,6 +5,7 @@ function variables = buildVariables(settings)
 arguments
     settings (1,1) struct
 end
+settings=hover.upgradeSettings(settings);
 hover.validateSettings(settings);
 
 % Copy exactly the independent variables that the original script defines.
@@ -22,6 +23,7 @@ end
 % The original model uses a numeric noise switch and char variant selector.
 variables.noise_true = double(settings.noise_true);
 variables.sim_fidelity = char(settings.sim_fidelity);
+variables.imu_nonlinear = strcmp(settings.sim_fidelity,'high');
 v = variables;
 v.Ix = v.I(1,1);
 v.Iy = v.I(2,2);
@@ -82,5 +84,22 @@ v.C(1,8) = v.C(1,8)+v.g;
 v.C(2,7) = v.C(2,7)-v.g;
 v.C(4:6,10:12) = eye(3);
 v.u0 = (v.m*v.g/4-v.C21)/v.C11;
+if isfield(settings,'Betaflight')
+    v.bfConfig=settings.Betaflight;
+else
+    v.bfConfig=bf.hoverConfig(settings.max_pot);
+end
+v.bfSim=bf.simulationOptions(v,v.bfConfig);
+if isfield(settings,'FirmwareAdapter')
+    adapterNames=fieldnames(settings.FirmwareAdapter);
+    for k=1:numel(adapterNames)
+        name=adapterNames{k};
+        if ~isfield(v.bfSim,name), error('bf:AdapterSetting','Unknown adapter setting: %s',name); end
+        v.bfSim.(name)=settings.FirmwareAdapter.(name);
+    end
+end
+bf.validateOptions(v.bfSim);
+v.bfConfig=bf.calibratedConfig(v.bfConfig,v.bfSim);
+v.bfRc=bf.receiverChannels(v.bfSim);
 variables = v;
 end

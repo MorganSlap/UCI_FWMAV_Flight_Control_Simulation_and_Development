@@ -9,10 +9,10 @@ schema = struct('Key',{},'Label',{},'Group',{},'Unit',{},'Default',{}, ...
 add('sim_fidelity','Dynamics fidelity','Simulation','','high','choice', ...
     {'high','low'},'high: nonlinear dynamics; low: linearized hover dynamics.');
 add('t_sim','Simulation duration','Simulation','s',10);
-add('fs','Controller frequency','Simulation','Hz',4000,'number',{}, ...
-    'Recalculates controller Ts=1/fs and digital filter coefficients. Fixed sensor sample times inside the model are unchanged.');
+add('fs','Sensor sampling frequency','Simulation','Hz',4000,'number',{}, ...
+    'The SITL build samples sensors at 4000 Hz. Set the PID/mixer divider in Betaflight Configurator; sensor sampling remains at 4000 Hz.');
 add('noise_true','Enable simulated noise','Simulation','',true,'logical',{}, ...
-    'Preserves script behavior: with noise disabled, effective Mahoney Kp=0.25 and Ki=0.');
+    'Enables sensor noise, bias, vibration and wing uncertainty. Physical specific force remains active in either setting.');
 add('seed','Noise seed','Simulation','',23341,'number',{}, ...
     'Use the same seed for repeatable comparisons. Integer from 0 through 2^32-1.');
 
@@ -80,10 +80,18 @@ add('accel.range','Accelerometer total range','Sensors and estimator','g',4,'num
 add('accel.resolution_bits','Accelerometer resolution','Sensors and estimator','bits',16);
 add('accel.BW','Accelerometer bandwidth','Sensors and estimator','Hz',740);
 add('accel.LPF_set','Accelerometer LPF cutoff','Sensors and estimator','Hz',5);
+add('accel.sample_rate','Accelerometer output rate','Sensors and estimator','Hz',1600);
+add('accel.noise_density','Accelerometer noise density','Sensors and estimator','g/sqrt(Hz)',0.00016);
+add('accel.bias','Accelerometer bias [x y z]','Sensors and estimator','g',0.02*ones(3,1),'matrix');
+add('accel.vibration','Accelerometer wing vibration','Sensors and estimator','g',0.1);
 add('gyro.range','Gyroscope +/- range','Sensors and estimator','deg/s',1000);
 add('gyro.resolution_bits','Gyroscope resolution','Sensors and estimator','bits',16);
 add('gyro.BW','Gyroscope bandwidth','Sensors and estimator','Hz',751);
 add('gyro.LPF_set','Gyroscope LPF cutoff','Sensors and estimator','Hz',5);
+add('gyro.sample_rate','Gyroscope output rate','Sensors and estimator','Hz',3200);
+add('gyro.noise_density','Gyroscope noise density','Sensors and estimator','deg/s/sqrt(Hz)',0.007);
+add('gyro.bias','Gyroscope bias [x y z]','Sensors and estimator','deg/s',0.5*ones(3,1),'matrix');
+add('gyro.vibration','Gyroscope wing vibration','Sensors and estimator','deg/s',3.7);
 add('mahoney.Kp','Mahoney proportional gain','Sensors and estimator','',0.25,'number',{}, ...
     'Used when noise is enabled. Noise-off behavior is fixed to 0.25, matching lin_hover.m.');
 add('mahoney.Ki','Mahoney integral gain','Sensors and estimator','',0.05,'number',{}, ...

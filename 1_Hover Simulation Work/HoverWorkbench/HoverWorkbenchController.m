@@ -21,6 +21,7 @@ classdef HoverWorkbenchController < handle
         PlotCount = 0
         ParameterEditors
         UI = struct()
+        FirmwareEditor = []
     end
     properties (Access = private)
         RunStarted
@@ -29,8 +30,18 @@ classdef HoverWorkbenchController < handle
     methods
         function obj = HoverWorkbenchController(app)
             obj.App = app;
-            obj.Settings = hover.defaultSettings();
+            obj.Settings = hover.hoverExample();
             obj.Schema = hover.settingsSchema();
+            % The native firmware replaces these legacy controller settings.
+            oldKeys={'mahoney.Kp','mahoney.Ki','roll_P','roll_I','roll_D', ...
+                'pitch_P','pitch_I','pitch_D','yaw_P','yaw_I','yaw_D','strength','MMA','max_pot','fs'};
+            if ~bf.flightInterfacesReady()
+                % The prepared upgrade exposes these fixed sensor values.
+                % Do not display ineffective editors before it is installed.
+                oldKeys=[oldKeys,{'accel.sample_rate','accel.noise_density','accel.bias','accel.vibration', ...
+                    'gyro.sample_rate','gyro.noise_density','gyro.bias','gyro.vibration'}];
+            end
+            obj.Schema=obj.Schema(~ismember({obj.Schema.Key},oldKeys));
             obj.DataRoot = fullfile(fileparts(mfilename('fullpath')), 'data');
             if ~isfolder(obj.DataRoot), mkdir(obj.DataRoot); end
             obj.ParameterEditors = containers.Map('KeyType','char','ValueType','any');
@@ -46,45 +57,54 @@ classdef HoverWorkbenchController < handle
         end
 
         function buildHeader(obj)
-            g = uigridlayout(obj.App.HeaderPanel,[3 5]);
-            g.ColumnWidth = {'1x',230,180,110,90};
+            g = uigridlayout(obj.App.HeaderPanel,[3 6]);
+            g.ColumnWidth = {'1x',220,170,165,120,80};
             g.RowHeight={12,36,12}; g.RowSpacing=0; g.Padding = [0 0 0 0];
             titleGrid = uigridlayout(g,[2 1]);
             titleGrid.Layout.Row=[1 3]; titleGrid.Layout.Column=1;
             titleGrid.RowHeight = {32,22}; titleGrid.Padding = [0 0 0 0];
             uilabel(titleGrid,'Text','HOVER WORKBENCH','FontSize',24,'FontWeight','bold');
             uilabel(titleGrid,'Text','Configure flight. Capture results. Compare runs.','FontSize',12);
-            obj.UI.RunLabel = uieditfield(g,'text','Value','Hover tuning', ...
+            obj.UI.RunLabel = uieditfield(g,'text','Value','IMU-only trimmed hover', ...
                 'Placeholder','Name this run','Tooltip','A descriptive label for the saved run');
             obj.UI.RunLabel.Layout.Row=2; obj.UI.RunLabel.Layout.Column=2;
+            obj.UI.Noise=uicheckbox(g,'Text','Simulated noise: ON', ...
+                'Value',logical(obj.Settings.noise_true),'FontWeight','bold', ...
+                'Tooltip','Enable the existing sensor noise, bias, vibration and actuator-noise model. Saved with every preset and run.', ...
+                'ValueChangedFcn',@(src,~)obj.editSetting('noise_true',logical(src.Value)));
+            obj.UI.Noise.Layout.Row=2; obj.UI.Noise.Layout.Column=3;
             obj.UI.DefaultPlots = uicheckbox(g,'Text','Show default plots','Value',true, ...
                 'ValueChangedFcn',@(~,~)obj.toggleDefaults());
-            obj.UI.DefaultPlots.Layout.Row=2; obj.UI.DefaultPlots.Layout.Column=3;
+            obj.UI.DefaultPlots.Layout.Row=2; obj.UI.DefaultPlots.Layout.Column=4;
             obj.UI.Run = uibutton(g,'Text','Run simulation','FontWeight','bold', ...
                 'ButtonPushedFcn',@(~,~)obj.startRun());
-            obj.UI.Run.Layout.Row=2; obj.UI.Run.Layout.Column=4;
+            obj.UI.Run.Layout.Row=2; obj.UI.Run.Layout.Column=5;
             obj.UI.Stop = uibutton(g,'Text','Stop','Enable','off', ...
                 'ButtonPushedFcn',@(~,~)obj.stopRun());
-            obj.UI.Stop.Layout.Row=2; obj.UI.Stop.Layout.Column=5;
+            obj.UI.Stop.Layout.Row=2; obj.UI.Stop.Layout.Column=6;
         end
 
         function buildSettings(obj)
             g = uigridlayout(obj.App.SettingsTab,[1 2]);
             g.ColumnWidth = {235,'1x'}; g.Padding = [16 16 16 16]; g.ColumnSpacing = 20;
-            side = uigridlayout(g,[8 1]);
-            side.RowHeight = {28,32,'1x',32,32,32,42,80}; side.Padding = [0 0 0 0];
+            side = uigridlayout(g,[10 1]);
+            side.RowHeight = {28,38,32,'1x',32,32,32,32,42,80}; side.Padding = [0 0 0 0];
             uilabel(side,'Text','SIMULATION SETTINGS','FontWeight','bold');
+            obj.UI.Firmware=uibutton(side,'Text','BETAFLIGHT CONFIGURATOR', ...
+                'BackgroundColor',[1 0.72 0.12],'FontColor',[0.08 0.09 0.11], ...
+                'FontWeight','bold','ButtonPushedFcn',@(~,~)obj.openFirmware());
             obj.UI.SearchSettings = uieditfield(side,'text','Placeholder','Find a parameter...', ...
                 'ValueChangedFcn',@(~,~)obj.renderSettings());
             groups = unique(string({obj.Schema.Group}),'stable');
-            obj.UI.Groups = uilistbox(side,'Items',cellstr([groups,"Derived values"]), ...
+            obj.UI.Groups = uilistbox(side,'Items',cellstr(["Firmware interface","Receiver channels",groups,"Derived values"]), ...
                 'ValueChangedFcn',@(~,~)obj.renderSettings());
             uibutton(side,'Text','Save preset...','ButtonPushedFcn',@(~,~)obj.savePreset());
             uibutton(side,'Text','Load preset...','ButtonPushedFcn',@(~,~)obj.loadPreset());
+            uibutton(side,'Text','Load hover example','ButtonPushedFcn',@(~,~)obj.loadHoverExample());
             uibutton(side,'Text','Reset to script defaults','ButtonPushedFcn',@(~,~)obj.resetSettings());
-            obj.UI.PresetStatus = uilabel(side,'Text','Script defaults','WordWrap','on');
+            obj.UI.PresetStatus = uilabel(side,'Text','Level hover: IMU only, fixed throttle, noise ON','WordWrap','on');
             uilabel(side,'Text',sprintf(['Inputs are saved with every run.\n' ...
-                'Computed parameters are recalculated automatically.\nThe source model and script stay unchanged.']), ...
+                'Open Betaflight Configurator for PID, filters, rates, modes and mixer settings.']), ...
                 'WordWrap','on','FontSize',11);
             main = uigridlayout(g,[4 1]);
             main.RowHeight = {32,42,'1x',66}; main.Padding = [0 0 0 0];
@@ -95,12 +115,51 @@ classdef HoverWorkbenchController < handle
             obj.UI.Notes = uitextarea(main,'Placeholder','Run notes (saved with the results)');
         end
 
+        function loadHoverExample(obj)
+            if obj.Busy, return; end
+            obj.Settings=hover.hoverExample();
+            obj.UI.RunLabel.Value='IMU-only trimmed hover';
+            obj.syncFirmwareEditor(); obj.renderSettings();
+            obj.UI.PresetStatus.Text='Level hover: IMU only, fixed throttle, noise ON';
+        end
+
+        function openFirmware(obj)
+            if obj.Busy, return; end
+            if ~isfield(obj.Settings,'Betaflight'), obj.Settings.Betaflight=bf.hoverConfig(obj.Settings.max_pot); end
+            if ~isempty(obj.FirmwareEditor) && isvalid(obj.FirmwareEditor)
+                delete(obj.FirmwareEditor);
+            end
+            obj.FirmwareEditor=bf.Configurator(obj.Settings.Betaflight);
+            obj.FirmwareEditor.AppliedFcn=@(config)obj.applyFirmware(config);
+        end
+
+        function applyFirmware(obj,config)
+            obj.Settings.Betaflight=config;
+            obj.renderSettings();
+            obj.UI.PresetStatus.Text='Modified Betaflight configuration';
+        end
+
+        function syncFirmwareEditor(obj)
+            if ~isempty(obj.FirmwareEditor) && isvalid(obj.FirmwareEditor)
+                if isfield(obj.Settings,'Betaflight'), config=obj.Settings.Betaflight;
+                else, config=bf.hoverConfig(obj.Settings.max_pot); end
+                obj.FirmwareEditor.setConfiguration(config);
+            end
+        end
+
         function renderSettings(obj)
+            obj.syncNoiseControl();
             delete(obj.UI.EditorPanel.Children);
             obj.ParameterEditors = containers.Map('KeyType','char','ValueType','any');
             group = string(obj.UI.Groups.Value);
             query = lower(string(obj.UI.SearchSettings.Value));
             obj.UI.GroupTitle.Text = char(group);
+            if group == "Firmware interface" && strlength(query)==0
+                obj.renderFirmwareInterface(); return
+            end
+            if group == "Receiver channels" && strlength(query)==0
+                obj.renderReceiverChannels(); return
+            end
             if group == "Derived values" && strlength(query)==0
                 obj.renderDerived(); return
             end
@@ -172,6 +231,127 @@ classdef HoverWorkbenchController < handle
             end
         end
 
+        function renderFirmwareInterface(obj)
+            obj.UI.GroupHelp.Text=['Configure the simulated receiver and startup. ' ...
+                'Use Betaflight Configurator for the flight software itself.'];
+            v=hover.buildVariables(obj.Settings);
+            g=uigridlayout(obj.UI.EditorPanel,[11 3]); g.ColumnWidth={240,'1x',150};
+            g.RowHeight={40,40,40,40,40,40,50,40,40,90,40}; g.Padding=[8 8 16 8];
+            labels={'Command source','Receiver update rate','Calibration warmup','Arming settle time','Throttle settling before release','Throttle receiver pulse','Ideal bench accel calibration'};
+            keys={'CommandMode','RcRateHz','WarmupSeconds','ArmSettleSeconds','SpoolupSeconds','ThrottlePWM','UseKnownAccelCalibration'};
+            units={'','Hz','s','s','s','microseconds','Known simulated bias'};
+            for k=1:7
+                key=keys{k}; uilabel(g,'Text',labels{k},'WordWrap','on');
+                if k==1
+                    control=uidropdown(g,'Items',{'Angle reference','Rate reference','Raw receiver'}, ...
+                        'ItemsData',{'angle','rate','receiver'},'Value',v.bfSim.CommandMode, ...
+                        'ValueChangedFcn',@(src,~)obj.editAdapter(key,src.Value));
+                elseif strcmp(key,'UseKnownAccelCalibration')
+                    control=uicheckbox(g,'Text','Use simulated sensor bias','Value',logical(v.bfSim.(key)), ...
+                        'Tooltip','Sets native acc_calibration from the configured simulated bias (zero when noise is off). Disable to use the Configurator CLI offsets. Effective offsets are saved in Variables.bfConfig.', ...
+                        'ValueChangedFcn',@(src,~)obj.editAdapter(key,logical(src.Value)));
+                else
+                    value=v.bfSim.(key);
+                    if strcmp(key,'ThrottlePWM') && ~isempty(v.bfSim.ReceiverPWM)
+                        value=v.bfSim.ReceiverPWM(v.bfSim.ReceiverLayout.Throttle);
+                    end
+                    control=uieditfield(g,'numeric','Value',value, ...
+                        'ValueChangedFcn',@(src,~)obj.editAdapter(key,src.Value));
+                    if strcmp(key,'ThrottlePWM') && ~isempty(v.bfSim.ReceiverPWM)
+                        control.Enable='off'; control.Tooltip='Custom value from the Receiver channels page. Edit it there, or restore automatic channel values.';
+                    end
+                end
+                if obj.Busy, control.Enable='off'; end
+                uilabel(g,'Text',units{k});
+            end
+            uilabel(g,'Text','Gyro / sensor sampling');
+            uilabel(g,'Text','4000 Hz','FontWeight','bold');
+            uilabel(g,'Text','Fixed by SITL build');
+            uilabel(g,'Text','PID and mixer frequency');
+            divider=round(4000*v.bfSim.PidSampleTime);
+            obj.UI.PidDivider=uidropdown(g,'Items',cellstr(compose('%.4g Hz (divide by %d)',4000./(1:16)',(1:16)')), ...
+                'ItemsData',1:16,'Value',divider, ...
+                'ValueChangedFcn',@(src,~)obj.editPidDivider(src.Value));
+            if obj.Busy, obj.UI.PidDivider.Enable='off'; end
+            uilabel(g,'Text','Native firmware rate');
+            note=uilabel(g,'Text',['Angle mode uses Xref roll/pitch angles and yaw rate. Rate mode uses Xref body rates. ' ...
+                'Raw receiver uses the Receiver channels page and configured channel map. Throttle is fixed: no altitude feedback. ' ...
+                'Re-trim after changing the plant or motor settings. Ideal bench calibration overrides CLI accelerometer offsets using the simulated bias; it is not an estimated in-flight correction.'], ...
+                'WordWrap','on'); note.Layout.Row=10; note.Layout.Column=[1 3];
+            reset=uibutton(g,'Text','Restore automatic receiver / startup defaults', ...
+                'ButtonPushedFcn',@(~,~)obj.resetAdapter()); reset.Layout.Row=11; reset.Layout.Column=[1 3];
+        end
+
+        function editPidDivider(obj,divider)
+            if obj.Busy, return; end
+            config=obj.Settings.Betaflight;
+            schema=bf.parseCliSettings(config.SchemaText);
+            item=schema(strcmp({schema.Name},'pid_process_denom'));
+            obj.Settings.Betaflight=bf.setSetting(config,item(1),sprintf('%d',divider));
+            obj.syncFirmwareEditor(); obj.renderSettings();
+            obj.UI.PresetStatus.Text='Modified native PID/mixer frequency';
+        end
+
+        function renderReceiverChannels(obj)
+            obj.UI.GroupHelp.Text=['Set physical receiver pulses in microseconds. Custom AUX pulses support native AND/OR and linked modes. ' ...
+                'Keep ARM off during calibration. Stick pulses are used in Raw receiver mode; AUX and throttle apply in every mode.'];
+            v=hover.buildVariables(obj.Settings); layout=v.bfSim.ReceiverLayout;
+            labels=compose("CH %d",1:16);
+            labels(layout.Roll)="Roll"; labels(layout.Pitch)="Pitch";
+            labels(layout.Throttle)="Throttle"; labels(layout.Yaw)="Yaw";
+            labels(layout.Arm)=labels(layout.Arm)+" / ARM";
+            if ~isempty(layout.Angle), labels(layout.Angle)=labels(layout.Angle)+" / ANGLE"; end
+            g=uigridlayout(obj.UI.EditorPanel,[3 1]); g.RowHeight={42,'1x',40}; g.Padding=[8 8 16 8];
+            if isempty(v.bfSim.ReceiverPWM) && isempty(v.bfSim.StartupReceiverPWM)
+                state='Automatic values from channel map, endpoints and mode ranges. Edit a cell to customize.';
+            else
+                state='Custom channel values. These pulses are saved with the preset and each run.';
+            end
+            obj.UI.ReceiverStatus=uilabel(g,'Text',state,'WordWrap','on');
+            obj.UI.ReceiverPulses=uitable(g,'Data',[bf.startupChannels(v.bfSim,false),bf.receiverChannels(v.bfSim)], ...
+                'RowName',cellstr(labels),'ColumnName',{'Calibration / disarmed','Armed / simulation'}, ...
+                'ColumnEditable',repmat(~obj.Busy,1,2),'ColumnFormat',{'bank','bank'}, ...
+                'CellEditCallback',@(src,event)obj.editReceiverPulses(src,event));
+            obj.UI.ReceiverPulses.Tooltip='Arming settle uses the simulation column with throttle held at its calibrated minimum.';
+            reset=uibutton(g,'Text','Restore automatic channel values', ...
+                'ButtonPushedFcn',@(~,~)obj.resetReceiverPulses());
+            if obj.Busy, reset.Enable='off'; end
+        end
+
+        function editReceiverPulses(obj,source,event)
+            if obj.Busy, return; end
+            try
+                candidate=obj.Settings;
+                candidate.FirmwareAdapter.StartupReceiverPWM=source.Data(:,1);
+                candidate.FirmwareAdapter.ReceiverPWM=source.Data(:,2);
+                hover.buildVariables(candidate);
+                obj.Settings=candidate;
+                obj.UI.ReceiverStatus.Text='Custom channel values. These pulses are saved with the preset and each run.';
+                obj.UI.PresetStatus.Text='Modified receiver channels';
+            catch err
+                source.Data(event.Indices(1),event.Indices(2))=event.PreviousData;
+                uialert(obj.App.UIFigure,err.message,'Invalid receiver pulse');
+            end
+        end
+
+        function resetReceiverPulses(obj)
+            if obj.Busy, return; end
+            fields=intersect(fieldnames(obj.Settings.FirmwareAdapter),{'ReceiverPWM','StartupReceiverPWM'});
+            obj.Settings.FirmwareAdapter=rmfield(obj.Settings.FirmwareAdapter,fields);
+            obj.renderSettings(); obj.UI.PresetStatus.Text='Automatic receiver channels';
+        end
+
+        function editAdapter(obj,key,value)
+            if obj.Busy, return; end
+            obj.Settings.FirmwareAdapter.(key)=value;
+            obj.UI.PresetStatus.Text='Modified firmware interface';
+        end
+
+        function resetAdapter(obj)
+            if obj.Busy, return; end
+            obj.Settings.FirmwareAdapter=struct(); obj.renderSettings();
+        end
+
         function editSetting(obj,key,value)
             if obj.Busy, return; end
             parts=strsplit(key,'.');
@@ -180,8 +360,28 @@ classdef HoverWorkbenchController < handle
             else
                 obj.Settings.(parts{1}).(parts{2})=value;
             end
+            if strcmp(key,'noise_true')
+                obj.syncNoiseControl();
+                if obj.ParameterEditors.isKey(key)
+                    control=obj.ParameterEditors(key);
+                    control.Value=logical(value);
+                end
+            end
             obj.UI.PresetStatus.Text='Modified settings';
             obj.setStatus('Settings updated. Run to capture a new result.');
+        end
+
+        function syncNoiseControl(obj)
+            enabled=logical(obj.Settings.noise_true);
+            obj.UI.Noise.Value=enabled;
+            if enabled
+                obj.UI.Noise.Text='Simulated noise: ON';
+                obj.UI.Noise.FontColor=[0.52 0.32 0.02];
+            else
+                obj.UI.Noise.Text='Simulated noise: OFF';
+                obj.UI.Noise.FontColor=[0.35 0.35 0.35];
+            end
+            obj.UI.Noise.Enable=obj.onOff(~obj.Busy);
         end
 
         function editMatrix(obj,key,control,event)
@@ -220,7 +420,7 @@ classdef HoverWorkbenchController < handle
                 if isfield(options,'DefaultPlots'), obj.UI.DefaultPlots.Value=options.DefaultPlots; end
                 if isfield(options,'RunLabel'), obj.UI.RunLabel.Value=char(options.RunLabel); end
                 if isfield(options,'Notes'), obj.UI.Notes.Value=cellstr(string(options.Notes)); end
-                obj.renderSettings(); obj.toggleDefaults(); obj.UI.PresetStatus.Text=['Loaded: ' name];
+                obj.syncFirmwareEditor(); obj.renderSettings(); obj.toggleDefaults(); obj.UI.PresetStatus.Text=['Loaded: ' name];
             catch err, obj.showError(err.message); end
         end
 
@@ -229,7 +429,7 @@ classdef HoverWorkbenchController < handle
             answer=uiconfirm(obj.App.UIFigure,'Replace the current inputs with the script defaults?', ...
                 'Reset settings','Options',{'Reset','Cancel'},'DefaultOption',2,'CancelOption',2);
             if ~strcmp(answer,'Reset'), return; end
-            obj.Settings=hover.defaultSettings(); obj.renderSettings();
+            obj.Settings=hover.defaultSettings(); obj.syncFirmwareEditor(); obj.renderSettings();
             obj.UI.PresetStatus.Text='Script defaults';
         end
 
@@ -394,6 +594,7 @@ classdef HoverWorkbenchController < handle
 
         function setBusy(obj,value)
             obj.UI.Run.Enable=obj.onOff(~value); obj.UI.Stop.Enable=obj.onOff(value);
+            obj.UI.Noise.Enable=obj.onOff(~value);
             obj.UI.RunLabel.Enable=obj.onOff(~value); obj.UI.Notes.Enable=obj.onOff(~value);
             keys=obj.ParameterEditors.keys;
             for k=1:numel(keys)
@@ -483,8 +684,9 @@ classdef HoverWorkbenchController < handle
         end
 
         function signalDoubleClick(obj,event)
-            if isempty(event.Node) || isempty(event.Node.NodeData), return; end
-            obj.plotSignals(event.Node.NodeData);
+            info=event.InteractionInformation;
+            if ~isfield(info,'Node') || isempty(info.Node) || isempty(info.Node.NodeData), return; end
+            obj.plotSignals(info.Node.NodeData);
         end
 
         function plotSelected(obj)
@@ -560,7 +762,7 @@ classdef HoverWorkbenchController < handle
 
         function useRunSettings(obj)
             if obj.Busy || isempty(obj.ActiveRecord), return; end
-            obj.Settings=obj.ActiveRecord.Settings; obj.renderSettings();
+            obj.Settings=hover.upgradeSettings(obj.ActiveRecord.Settings); obj.syncFirmwareEditor(); obj.renderSettings();
             obj.UI.PresetStatus.Text=['From run: ' char(obj.ActiveRecord.Label)];
             obj.App.Pages.SelectedTab=obj.App.SettingsTab;
         end
@@ -640,6 +842,7 @@ classdef HoverWorkbenchController < handle
 
         function delete(obj)
             obj.cleanupSimulation();
+            if ~isempty(obj.FirmwareEditor) && isvalid(obj.FirmwareEditor), delete(obj.FirmwareEditor); end
             if ~isempty(obj.PollTimer) && isvalid(obj.PollTimer)
                 stop(obj.PollTimer); delete(obj.PollTimer);
             end

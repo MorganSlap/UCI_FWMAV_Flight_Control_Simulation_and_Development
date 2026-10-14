@@ -1,6 +1,17 @@
 # Hover Workbench
 
-A settings, simulation, and analysis app for `lin_hover_sim.slx`, built with MATLAB App Designer components. It reads the same initial values as `lin_hover.m` and independently calculates the variables needed by the model. Neither the initialization script nor the model needs to be edited.
+A settings, simulation, and analysis app for `lin_hover_sim.slx`, built with MATLAB App Designer components. It reads the same initial values as `lin_hover.m` and independently calculates the variables needed by the model.
+
+On `codex/betaflight-simulation`, the model runs actual Betaflight SITL firmware.
+Use the **Betaflight Configurator** button for native flight software settings
+and **Firmware interface** for receiver/startup settings and PID/mixer frequency.
+**Receiver channels** provides separate calibration and simulation pulse tables
+for all 16 input channels, including custom AUX combinations. Sensor sampling
+stays at 4 kHz when the native PID/mixer divider changes. See
+[the integration guide](../../Betaflight/README.md) for build instructions,
+parameter mapping, verification and supported-feature boundaries. Presets and
+run archives include the firmware configuration; legacy PID/Mahony/mixer fields
+are retained in old records but do not control the new firmware.
 
 The app has three pages: **Settings**, **Default plots**, and **Explore runs**.
 The `.mlapp` contains the App Designer shell; dynamic parameter editors and
@@ -25,7 +36,9 @@ Save a preset to keep a configuration without running a simulation. Presets are 
 
 The state order is `[x y z u v w phi theta psi p q r]`. Positions are in metres, translational velocities in metres per second, angles in radians, and body rates in radians per second. The body/NED vertical direction is positive down. Default plots convert attitude and angular rate to degrees and degrees per second; signal exports retain the units shown by the signal browser.
 
-The script's behavior when noise is disabled is preserved: the effective Mahoney gains become `Kp = 0.25` and `Ki = 0`. These effective values can therefore differ from the stored requested estimator settings.
+The plant's noise switch is preserved. Betaflight estimator gains are configured
+through its native `imu_dcm_kp` and `imu_dcm_ki` settings; legacy Mahoney fields
+do not configure this branch's estimator.
 
 ## Run and retain results
 
@@ -60,6 +73,19 @@ results-library/
 The archive is written to a staging folder and then finalized. Incomplete staging folders are not shown in the run library. A results library can be moved or copied; use the library folder selector to reopen it. New archives contain settings, simulation data, and lightweight metadata. The model and initialization script are not copied into run folders. Existing archives remain readable, and any source copies in older archives are left in place. Keep libraries outside source control when they contain large simulation files.
 
 ## Default and custom plots
+
+On the Betaflight branch the app opens with a complete **IMU-only trimmed
+hover** example: 10 s, level initial state, noise ON, ANGLE mode and 1859 us
+fixed throttle. **Load hover example** restores it. No altitude sensor or
+altitude/position controller is added. The saved `Betaflight/presets` JSON files
+include this case and a +5/-3 degree attitude-recovery case. **Reset to script
+defaults** remains available for the script inputs. The toolbar's bold
+**Simulated noise: ON/OFF** checkbox works on every page and synchronizes with
+presets and the Simulation page. Ideal and measured accelerometer/gyro signals
+are available in Explore, bringing the normal run to 104 signals. The example
+enables ideal bench accelerometer calibration from known simulated bias; disable
+that option in Firmware interface to use manual native calibration offsets.
+See `Betaflight/VALIDATION.md` for measured drift and the applied sensor-model fixes.
 
 Default plotting can be enabled or disabled independently of saving results. When enabled, the app displays the script's four plots: true states/rates, trim-adjusted controls, estimated attitude/rates, and true-minus-estimated errors. Truth is interpolated onto estimator timestamps for the error plots.
 

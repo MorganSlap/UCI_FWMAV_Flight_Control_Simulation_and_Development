@@ -19,6 +19,32 @@ stateUnits = {'m','m','m','m/s','m/s','m/s', ...
 [trueTime,trueData] = readKnown('state_output',12);
 [estTime,estData] = readKnown('state_estimate',12);
 [controlTime,controlData] = readKnown('controls',4);
+[firmwareTime,firmwareData] = readKnown('betaflight_diagnostics',40);
+if ~isempty(firmwareData)
+    axes={'Roll','Pitch','Yaw'}; terms={'P','I','D','F'};
+    for motor=1:4
+        add(sprintf('betaflight.motor%d',motor),sprintf('Firmware motor %d',motor), ...
+            'Betaflight motors','us',firmwareTime,firmwareData(:,5+motor),'betaflight_diagnostics');
+    end
+    for axis=1:3
+        name=lower(axes{axis});
+        add(['betaflight.receiver_rate.' name],[axes{axis} ' receiver rate'], ...
+            'Betaflight receiver','rad/s',firmwareTime,firmwareData(:,15+axis),'betaflight_diagnostics');
+        for term=1:4
+            add(['betaflight.pid.' name '.' terms{term}],[axes{axis} ' ' terms{term}], ...
+                'Betaflight PID','native units',firmwareTime,firmwareData(:,18+4*(axis-1)+term),'betaflight_diagnostics');
+        end
+        add(['betaflight.pid.' name '.Sum'],[axes{axis} ' PID sum'], ...
+            'Betaflight PID','native units',firmwareTime,firmwareData(:,36+axis),'betaflight_diagnostics');
+    end
+    keys={'armed','arming_disable_flags','flight_mode_flags','gyro_period','pid_period','motor_count'};
+    names={'Armed','Arming disable flags','Flight mode flags','Gyro loop period','PID loop period','Motor count'};
+    units={'','bitmask','bitmask','us','us',''};
+    for k=1:6
+        add(['betaflight.' keys{k}],names{k},'Betaflight status',units{k}, ...
+            firmwareTime,firmwareData(:,30+k),'betaflight_diagnostics');
+    end
+end
 for k = 1:12
     if ~isempty(trueData)
         add(['state.' stateKeys{k}],stateNames{k},'True state', ...
@@ -71,7 +97,7 @@ end
 % without editing the app. Buses and vector-valued signals are expanded.
 outputNames = namesOf(simOut);
 skipNames = {'state_output','state_estimate','controls','tout', ...
-    'SimulationMetadata','ErrorMessage'};
+    'SimulationMetadata','ErrorMessage','betaflight_diagnostics'};
 fallbackTime = getMember(simOut,'tout');
 for k = 1:numel(outputNames)
     name = char(outputNames{k});
@@ -140,6 +166,8 @@ end
                 (isstruct(value) && isfield(value,'time') && isfield(value,'signals')) || ...
                 ((isnumeric(value) || islogical(value)) && ~isempty(timeHint))
             [time,data,unit] = unpack(value,timeHint);
+            if isempty(unit) && startsWith(key,'logged.logsout.imu_accel_'), unit='m/s^2'; end
+            if isempty(unit) && startsWith(key,'logged.logsout.imu_gyro_'), unit='rad/s'; end
             for component = 1:size(data,2)
                 componentName = name;
                 componentKey = key;

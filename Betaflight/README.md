@@ -32,17 +32,70 @@ this case; **Reset to script defaults** restores the script inputs. The prominen
 It stays synchronized with loaded presets and the Simulation settings page,
 and is disabled during a run. The seed and noise parameters are saved.
 
+The original **CDx=CDy=CDz=CDw=1** aerodynamic damping is enabled in the script,
+GUI defaults and all four complete examples. Edit it under **Aerodynamic damping**.
+The nonlinear plant and ideal IMU both use the same quadratic drag forces;
+the linear plant and IMU use the same linearized drag coefficients. The earlier
+GUI override that set all four coefficients to zero has been removed.
+
 Two complete, data-only presets are in `Betaflight/presets/`:
 `imu-only-hover.json` and `attitude-recovery.json`. The recovery case starts at
 +5 degrees roll / -3 degrees pitch with otherwise identical settings. Use
-**Load preset** to select it. The noisy level example stays within 0.18 degrees
-roll/pitch, drifts 0.71 m horizontally and loses 0.293 m of height in 10 s.
-Noisy recovery settles within 1 degree after 5.16 s. These are attitude-control
-examples at fixed throttle; they do not establish position/altitude hold.
+**Load preset** to select it. These are attitude-control examples at fixed
+throttle; they do not establish position/altitude hold. Measured results for
+the current gains and earlier presets are distinguished in [VALIDATION.md](VALIDATION.md).
 
-The example uses native `imu_dcm_kp = 250` (0.025), compared with the firmware
-default 2500 (0.25). This reduces accelerometer correction of the gyro-integrated
-attitude on this thrust-driven plant. Rate PID gains remain P=10, I/D/F=0.
+Simulation defaults and all four supplied examples now use **gyro LPF1 PT1 at
+5 Hz**, with simplified gyro tuning OFF, dynamic LPF minimum 0 (disabled) and
+LPF2 0 (disabled). The accelerometer uses **native PT2 at 5 Hz**. This applies
+to new `bf.hoverConfig` configurations from either the script or the workbench;
+saved user presets and archived settings retain their original values.
+
+The examples use native **`acc_lpf_hz = 5`**, **`imu_dcm_kp = 2500` (0.25)** and
+**`imu_dcm_ki = 0`**. The 5 Hz cutoff rejects the simulated 24 Hz wing vibration;
+the earlier 25 Hz cutoff allowed correlated vibration to bias the estimated
+gravity direction. The proportional correction is restored to the native
+default and the original script's 0.25. Integral attitude-bias correction stays
+at the native default OFF. The original torque-based rate PI gains are converted
+to native integer settings:
+
+| Axis | P | I | D | F |
+|---|---:|---:|---:|---:|
+| Roll | 133 | 4 | 0 | 0 |
+| Pitch | 134 | 4 | 0 | 0 |
+| Yaw (no plant authority) | 0 | 0 | 0 | 0 |
+
+The conversion uses arm length 0.11 m, thrust slope 0.000458 N/command,
+and the native 1055--1950 output range: one PID-sum unit corresponds to
+`2*S*C11*(1950-1055)/1000 = 9.01802e-5` Nm. Native P/I scaling and the
+rad/s-to-deg/s conversion give unrounded roll P/I 132.9369/3.9598 and pitch
+133.6221/3.9802. This matches small unsaturated rate-loop gains; it does not
+make the complete filtered ANGLE loop identical to the original controller.
+Reconvert after changing the actuator range, mixer or physical parameters.
+
+I-term relax/rotation, anti-gravity, D-max, both TPA rates, rate/ANGLE
+feedforward, feedforward boost/yaw hold, ANGLE earth reference, throttle boost,
+thrust linearization, battery sag compensation, rate acceleration limiting,
+crash recovery and yaw-spin recovery are disabled. Simplified PID tuning is
+OFF so sliders cannot rewrite the gains. TPA has no OFF enum: both rates are
+zero, while its mode remains the native default D. Unused smoothing times,
+thresholds, launch-control and HORIZON parameters retain native defaults;
+launch/HORIZON modes are not assigned to AUX channels. Integral/output clamps,
+sensor filtering, receiver smoothing, arming/failsafe and the existing ANGLE
+P gain of 20 remain in place.
+
+**Settings > Attitude estimator** exposes the active native accelerometer
+cutoff and estimator Kp/Ki. Gains are displayed directly (0.25 means native
+`imu_dcm_kp=2500`); saved presets and runs retain the actual CLI values. The
+inactive legacy `accel.LPF_set` and `gyro.LPF_set` controls are removed from
+the GUI. Those fields remain in old settings for compatibility but do not
+configure the native filters. Use Betaflight Configurator for gyro filters.
+
+The shared ANGLE-pulse/RATE-doublet examples inherit the same PI baseline.
+The script's separate `bf.hoverConfig()` baseline is unchanged; saved historical
+runs and user-created presets retain their original settings. Load a complete
+example (or the updated JSON preset) to apply these values in an already-open app.
+
 **Ideal bench accel calibration** is explicitly enabled in Firmware interface:
 it uses the known simulated bias to populate native `acc_calibration` before
 startup, without feeding true attitude/position into the estimator. Offsets are
@@ -111,6 +164,46 @@ flight modes, such as HORIZON, to be selected through AUX pulses.
 
 ## Configuration and data
 
+### Repeatable tuning runs
+
+Open **Settings > Run setup** to load a complete noisy hover, recovery,
+ANGLE-pulse or RATE-doublet example. Loading a complete example replaces the
+current plant, firmware and interface settings. The hover example remains the
+startup default. The command table can then be edited independently of the PID
+gains: rows contain time, roll, pitch and yaw rate. In ANGLE mode roll/pitch
+are degrees; in RATE mode they are degrees/second. Time starts at plant release
+after calibration, arming and throttle settling. Rows hold until the next row;
+before the first row the model's Xref applies. **Use constant Xref** clears the
+sequence. Rows beyond the stop time are not executed. Raw receiver mode requires
+an empty sequence; its physical input channels remain the source of commands.
+
+The sequence is applied in the physical-reference adapter before native receiver
+processing. It does not bypass Betaflight rate conversion, quantization,
+smoothing, limits, ANGLE control, PID or the mixer. Changes are accepted at the
+receiver frame rate. In script use, optional `bfSim.ReferenceSchedule` rows are
+`[seconds, roll, pitch, yawRate]`, in radians / radians per second, not the GUI's
+degrees. An empty sequence preserves the reference input without modification.
+
+**Flight analysis** displays a saved run's requested/true/estimated tracking,
+attitude estimation error, native P/I/D/feedforward contributions, all four
+motor commands and measured-minus-ideal gyro signal. Select Roll, Pitch or Yaw
+and export the six plots as PNG or PDF. RMS values cover the entire recorded
+interval and are weighted by elapsed time. They describe the run, not an
+automatic pass/fail assessment or a settled tracking error.
+
+Requested commands also appear in **Explore > Requested commands**, saved with
+their units and reconstructed from the workbench's constant Xref and saved
+sequence. They precede receiver processing and are not the internal ANGLE-loop
+rate setpoint. New workbench runs normally have 107 scalar signals. Older
+archives still load, with command reconstruction for analysis where possible;
+missing raw IMU logs are identified. For a custom model with another varying
+reference source, log that source directly rather than relying on this
+workbench-specific reconstruction.
+
+Changing the displayed run never changes the current settings. Use the existing
+**Use this run's settings** action to restore a tuning configuration. Archives
+remain settings, data and lightweight metadata only.
+
 * **Save preset** saves plant settings, firmware CLI/schema/identity, interface
   overrides and display preferences as JSON. **Load preset** restores them.
 * The configurator independently saves JSON or exports/imports CLI text.
@@ -143,6 +236,39 @@ configured sensor bias, followed by arming and throttle settling. Accelerometer
 offset correction remains the native `acc_calibration` setting; the optional
 ideal bench calibration above supplies its values. These are simulated pre-release phases, not a
 takeoff or ground-contact model.
+
+Startup now supplies gyro white noise at the configured physical sensor rate,
+using a local deterministic random stream and the same noise density/bandwidth
+as the flight sensor. The seed is saved with the run. Firmware still performs
+its own ADC quantization, offset averaging and movement check. This corrects
+the earlier adapter's constant-bias calibration: quantizing one constant value
+does not reproduce the mean of noisy, quantized flight samples. Receiver frames
+continue at their configured rate while IMU samples arrive at 4 kHz.
+The examples set `gyro_calib_duration = 400` (4 s), within their 5 s supported
+warmup; increase warmup if requesting a longer calibration. Noise OFF also
+disables calibration noise. Startup assumes a quiet supported IMU, with no
+wing vibration; accelerometer startup remains the ideal bench fixture above.
+
+The gyro boundary uses the driver's exact sensitivity (16.384 counts per
+degree/second in this build), replacing the earlier rounded 16.4 conversion.
+Neither change modifies native Mahony/PID code or feeds true attitude back
+into it. See [VALIDATION.md](VALIDATION.md) for direct sign tests and drift runs.
+
+As a limiting case, with zero translational drag, free-flight thrust is body-aligned and the
+accelerometer measures `[0,0,-T/m]` even when the vehicle is tilted and
+accelerating. It cannot separate gravity from translational acceleration.
+The native Mahony gravity assumption therefore pulls its estimate toward
+apparent level, and finite gyro-calibration error can still produce real
+attitude drift. Integer accel-offset quantization and vibration contribute as
+well. Better rate gains cannot recover an unobserved true tilt. This simulator
+does not use plant truth as an artificial gravity measurement.
+
+Drag is enabled by default. It contributes lateral specific force while
+opposing translation. Once translational acceleration is small, measured
+specific force approaches negative gravity in body coordinates, providing
+roll/pitch information. During acceleration, a gravity-only interpretation
+still has transient errors. Restoring drag does not imply position hold or
+identical behavior to the original estimator/controller.
 
 Native gyro/controller body-axis signs match these FRD rate inputs. For the
 Mahony estimator path used here, roll/pitch Euler outputs have the same signs;
@@ -216,15 +342,18 @@ configure those native filters.
 
 With explicit user approval, `bf.upgradeFlightInterfaces` has been applied:
 the IMU now measures non-gravitational force/mass, selects matching linear or
-quadratic drag, and retains physical acceleration when noise is off. White-noise
-power is density squared times bandwidth times sample time, as required by the
-Band-Limited White Noise block. Bias, noise density, vibration amplitude and
+quadratic drag, and retains physical acceleration when noise is off. On
+2026-10-17 the user requested restoring the lab-matched white-noise power:
+density squared times bandwidth, without the sample-time factor. The block
+therefore produces sample variance equal to that power divided by sample time.
+Startup gyro noise matches that convention; noisy example calibration uses
+`gyro_calib_noise_limit=200`. Bias, noise density, vibration amplitude and
 output rate are configurable. The nonlinear moment-arm input now uses `S`.
 `bf.flightInterfacesReady` returns true; the sensor editors are enabled.
 
 `bf.enableImuLogging` records ideal/measured accelerometer and gyro vectors in
-`logsout`. These add 12 scalar signals to Explore (104 total), with m/s^2 and
-rad/s units. `bf.plotImuNoise(record.Output,record.Variables)` plots sensor error
+`logsout`. Explore includes named raw gyro/accelerometer groups in SI and display
+units, in addition to the original logs. `bf.plotImuNoise(record.Output,record.Variables)` plots sensor error
 and a final-half-second detail, so filtered attitude plots cannot hide whether
 noise was enabled. Run archives still contain only settings, data and metadata.
 
@@ -268,6 +397,8 @@ estimatorReport = bf.verifyEstimator; % gyro bias, dynamic attitude, no truth fe
 timingReport = bf.verifyTiming;       % all 16 dividers, all five rate curves
 modeReport = bf.verifyModes;          % AND arming, ANGLE/HORIZON, linked modes
 replayReport = bf.verifyPlantReplay;  % both plants at 4 kHz gyro / 1 kHz PID
+[flightReport,record] = bf.verifyFlightTest('angle','high',true); % full trace/replay
+[rateReport,record] = bf.verifyFlightTest('rate','high');
 check = bf.PlantCheck('high',10);  % nonblocking; inspect check.Status
 % After it finishes, run the other plant:
 checkLinear = bf.PlantCheck('low',10);

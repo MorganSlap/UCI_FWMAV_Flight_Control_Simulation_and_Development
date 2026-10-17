@@ -4,6 +4,7 @@ function settings = upgradeSettings(settings)
 keys={'accel.sample_rate','accel.noise_density','accel.bias','accel.vibration', ...
     'gyro.sample_rate','gyro.noise_density','gyro.bias','gyro.vibration'};
 schema=hover.settingsSchema();
+if ~isfield(settings,'drag_enabled'), settings.drag_enabled=true; end
 for k=1:numel(keys)
     parts=strsplit(keys{k},'.');
     if isfield(settings,parts{1}) && ~isfield(settings.(parts{1}),parts{2})

@@ -1,7 +1,9 @@
 # Betaflight simulation integration
 
-Branch: `codex/betaflight-simulation`, based on the current checkout, preserving
-the user's uncommitted zero-drag changes in `lin_hover.m`.
+Branch: `codex/betaflight-simulation`. The original pre-integration script has
+CDx=CDy=CDz=CDw=1. These values are restored in the script and all supplied GUI
+examples; zero drag is not the user's intended default. The earlier attribution
+of the zero-drag settings to the user was not established by the Git history.
 
 Use the actual upstream Betaflight SITL flight stack, pinned to an immutable
 commit, with an isolated host adapter for deterministic Simulink stepping.
@@ -62,3 +64,88 @@ References: MATLAB app-building skill (`references/uifigure/guide.md`, existing
 App Designer architecture); MATLAB documentation skill for installed Simulink
 API signatures; official Betaflight SITL implementation and build instructions.
 Portable toolchains and run data remain local ignored artifacts.
+
+## Continuation: repeatable flight tests and tuning analysis (2026-10-14)
+
+Extend the existing App Designer external controller, using its grid-layout
+settings editor and tiled plots. Add an optional held command sequence in the
+host's physical-reference adapter, with angle-pulse and rate-doublet examples.
+The native receiver, estimator, PID and mixer continue processing those commands.
+Save the sequence with settings and expose requested commands beside measured
+responses in Explore. Add a Flight analysis page for tracking, estimator error,
+native P/I/D/F contributions and motor outputs, with saved-run selection.
+Keep the default noisy hover case and model/script unchanged. Validate command
+boundaries, preset round trips, both plant variants, actual GUI callbacks and
+exact firmware replay for a changing-command run. Recheck native timing on the
+current calibration-enabled binary. No new flight-control law or altitude
+feedback is introduced.
+
+Completed and verified: 49 unit tests; noisy 10-second ANGLE cases for both
+plants and nonlinear RATE doublets; all 40,632 exchanges from the full ANGLE
+case replay exactly; all 16 native PID/mixer dividers and five rate curves
+rechecked with the current binary. The actual GUI Run callback preserves the
+default noisy hover result and saves 107 signals. Sequence editing, saved-run
+selection, axis selection and PNG/PDF export pass. Starting gains remain
+untuned for the new maneuvers; overshoot/lag are explicitly reported. Model,
+initialization script and native binary remain unchanged in this continuation.
+
+## Requested converted PI defaults (2026-10-15)
+
+Completed: noisy hover/recovery use native roll 133/4/0/0 and pitch 134/4/0/0
+P/I/D/F with optional PID modifiers disabled through supported CLI values.
+Shared sequence examples and all four shipped JSON presets are consistent.
+Firmware CLI round trip, 36 targeted unit tests and actual GUI example-loading
+callbacks pass. Both noisy 10-second hover/recovery cases pass the existing
+criteria; recovery reaches +/-1 degree in 1.06 s. The additional 60-second
+level test retains attitude-estimation error and substantial translation, as
+recorded in Betaflight/VALIDATION.md. No model, script, estimator or binary
+changes were made to hide this behavior. All runs are saved in the GUI library.
+
+## Estimator audit and calibration correction (2026-10-15)
+
+Completed the requested sign/bug investigation. Supported +/-roll/pitch tests
+and gyro-only +/-rotation tests on all axes pass. Fixed two adapter bugs:
+constant startup gyro samples biased native calibration relative to noisy
+flight samples, and host conversion used 16.4 instead of native 16.384 counts
+per degree/second. Startup now models sensor-rate gyro white noise and native
+averaging; noisy examples use a 4 s calibration within 5 s warmup. The script
+passes its existing noise seed into adapter initialization. Models and native
+flight algorithms remain unchanged; the host executable was rebuilt.
+
+Verified 55 unit tests, native sign/scale/calibration/arming/failsafe/replay
+checks, GUI example loading, noisy 60 s hover, noisy 10 s recovery, a noise-OFF
+control and a 60 s gyro-only diagnostic. Corrected 60 s roll/pitch is
++0.295/-0.109 deg versus -0.568/-0.969 before. Remaining drift comes from finite
+gyro calibration and the accelerometer's lack of an independent gravity
+reference during zero-drag accelerating flight, plus noise/quantization.
+The gyro-only diagnostic is not the default. Before/after plots, saved runs,
+the exact binary hash and limitations are recorded in Betaflight/VALIDATION.md.
+
+## Restore the original drag configuration (2026-10-15)
+
+Restored original CDx=CDy=CDz=CDw=1 in the initialization script, GUI defaults
+and all four complete example presets. Removed the explicit GUI zero override.
+No SLX changes were necessary. Closed-loop logged specific force exactly matches
+the corresponding linear or quadratic drag acceleration in both plant variants.
+Noisy nonlinear hover at 60 s improves from 25.945 m to 5.924 m horizontal
+displacement and from +0.295/-0.109 deg to +0.175/-0.068 deg roll/pitch.
+At 180 s the restored-drag attitude has a small nonzero offset and is no longer
+following the initial straight-line trend; it peaks at 0.305/0.104 deg.
+The requested PI settings, estimator settings and noisy defaults are preserved.
+Stronger native accelerometer correction was tested separately and did not
+eliminate the offset. Details and saved-run labels are in VALIDATION.md.
+
+## Native filtering and attitude-control correction (2026-10-16)
+
+Identified inactive legacy LPF widgets: the GUI showed 5 Hz but native accel
+filtering was 25 Hz. A constrained level fixture with perfect gyro reproduced
+false roll/pitch from common-axis 24 Hz vibration; reducing the actual native
+cutoff to 5 Hz removed the displayed bias. Axis ablations isolated the effect
+of correlated lateral/vertical vibration in gravity-vector normalization.
+Added active native filter/Kp/Ki controls with physical gain units and preserved
+all raw native values in saved configurations. Complete examples now use native
+acc_lpf_hz=5, imu_dcm_kp=2500 (0.25) and imu_dcm_ki=0. The original drag, noise,
+vibration and requested rate PI settings remain. Estimator Ki=0.05 was tested
+separately and not adopted. The noisy 180 s run stays within 0.0866/0.0346 deg
+roll/pitch and ends at +0.0557/-0.0086 deg. Recovery reaches +/-1 degree after
+0.874 s and finishes near zero. Models and firmware binary were not changed.

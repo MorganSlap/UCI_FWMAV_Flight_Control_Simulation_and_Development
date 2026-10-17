@@ -23,53 +23,7 @@ classdef FlightController < matlab.System
             config=bf.calibratedConfig(obj.Configuration,obj.Options);
             obj.Firmware=bf.Client(config,obj.Options.Timeout,'java',obj.Options.TraceFile);
             try
-                x=obj.Options.InitialState;
-                % Stationary calibration before releasing the plant. Gravity
-                % is rotated into FRD; the estimator receives no truth angle.
-                a=obj.Options.Gravity*[sin(x(8));-sin(x(7))*cos(x(8));-cos(x(7))*cos(x(8))] ...
-                    +obj.Options.CalibrationAccelBias;
-                gyro=obj.Options.CalibrationGyro;
-                flags=8+obj.Options.NavigationSensors;
-                rc=bf.startupChannels(obj.Options,false);
-                framePeriod=1/obj.Options.RcRateHz;
-                count=ceil(obj.Options.WarmupSeconds/framePeriod);
-                for tick=0:count
-                    response=obj.Firmware.step(tick*framePeriod,gyro,a,rc,x,flags);
-                end
-                if response(31)~=0
-                    error('bf:CalibrationArmed','The calibration receiver pulses activated ARM. Set the disarmed column on the Receiver channels page.');
-                end
-                rc=bf.startupChannels(obj.Options,true);
-                armCount=ceil(obj.Options.ArmSettleSeconds/framePeriod);
-                for tick=1:armCount
-                    response=obj.Firmware.step((count+tick)*framePeriod,gyro,a,rc,x,flags);
-                end
-                if response(31)~=1
-                    error('bf:NotArmed','Betaflight did not arm after calibration (disable mask %.0f). Firmware log: %s',response(32),obj.Firmware.Folder);
-                end
-                if strcmp(obj.Options.CommandMode,'angle') && ~bitand(uint32(response(33)),uint32(1))
-                    error('bf:AngleNotActive','ANGLE mode did not activate. Check AUX ranges or supply matching pulses on the Receiver channels page.');
-                end
-                if strcmp(obj.Options.CommandMode,'rate') && bitand(uint32(response(33)),uint32(3))
-                    error('bf:RateModeActive','ANGLE or HORIZON is active with a rate reference. Set matching AUX pulses on the Receiver channels page.');
-                end
-                if response(36)~=4, error('bf:MotorCount','The current plant requires a four-motor mixer.'); end
-                if response(34)~=250 || abs(response(35)*1e-6-obj.Options.PidSampleTime)>1e-10
-                    error('bf:LoopRate','Native gyro/PID periods disagree with the requested configuration (%.0f/%.0f us).',response(34),response(35));
-                end
-                % Establish the flight throttle before releasing the airborne
-                % plant. Hold the initial attitude command during this phase
-                % so the attitude loop is not integrating a release transient.
-                rc=bf.receiverChannels(obj.Options);
-                reference=zeros(12,1); reference(7:8)=x(7:8);
-                if strcmp(obj.Options.CommandMode,'angle'), flags=flags+16; end
-                if strcmp(obj.Options.CommandMode,'rate'), flags=flags+32; end
-                spoolCount=ceil(obj.Options.SpoolupSeconds/framePeriod);
-                for tick=1:spoolCount
-                    response=obj.Firmware.step((count+armCount+tick)*framePeriod,gyro,a,rc,x,flags,reference);
-                end
-                if response(31)~=1, error('bf:SpoolupDisarmed','Firmware disarmed during throttle settling.'); end
-                obj.Epoch=(count+armCount+spoolCount)*framePeriod+obj.SampleTime;
+                obj.Epoch=bf.startup(obj.Firmware,obj.Options);
                 obj.LastReceiverFrame=-1;
             catch exception
                 delete(obj.Firmware); obj.Firmware=[]; rethrow(exception);
@@ -77,6 +31,7 @@ classdef FlightController < matlab.System
         end
         function [delta,estimate,diagnostics]=stepImpl(obj,gyro,accel,rc,state,reference)
             time=getCurrentTime(obj);
+            reference=bf.commandReference(reference,time,obj.Options);
             frame=floor((time+1e-10)*obj.Options.RcRateHz);
             flags=obj.Options.NavigationSensors;
             if frame~=obj.LastReceiverFrame

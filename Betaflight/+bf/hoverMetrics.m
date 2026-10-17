@@ -1,5 +1,7 @@
-function metrics=hoverMetrics(output)
+function metrics=hoverMetrics(output,variables)
 %HOVERMETRICS Assess attitude, estimator error, translation and motor output.
+% Supply variables to honor the linear plant's zdot=w approximation.
+if nargin<2, variables=struct(); end
 t=output.state_output.time;
 x=output.state_output.signals.values;
 td=output.betaflight_diagnostics.time;
@@ -8,6 +10,9 @@ truth=interp1(t,x(:,7:9),td);
 error=atan2(sin(d(:,10:12)-truth),cos(d(:,10:12)-truth));
 verticalSpeed=-sin(x(:,8)).*x(:,4)+sin(x(:,7)).*cos(x(:,8)).*x(:,5) ...
     +cos(x(:,7)).*cos(x(:,8)).*x(:,6);
+if isfield(variables,'sim_fidelity') && strcmp(variables.sim_fidelity,'low')
+    verticalSpeed=x(:,6);
+end
 outside=find(any(abs(x(:,7:8))>0.5*pi/180,2),1,'last');
 settled=0;
 if ~isempty(outside)

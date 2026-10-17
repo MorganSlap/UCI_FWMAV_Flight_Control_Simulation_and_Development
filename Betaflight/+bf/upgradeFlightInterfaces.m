@@ -34,9 +34,9 @@ for kind={'Accel','Gyro'}
     set_param([root '/' kind{1} ' Noise Scaling'],'Gain',[variable '.vibration*' scale]);
     set_param([root '/' kind{1} ' Sample Rate'],'SampleTime',['1/' variable '.sample_rate']);
     noise=[root '/' kind{1} newline 'White Noise'];
-    % Band-Limited White Noise divides its power parameter by sample time.
-    % Convert the desired per-sample variance (density^2 * bandwidth) to power.
-    power=sprintf('ones(3,1)*(%s.noise_density*%s)^2*%s.BW/%s.sample_rate',variable,scale,variable,variable);
+    % Lab-matched noise convention requested by the user: no sample-rate
+    % divisor in the mask. The block's resulting variance is power / Ts.
+    power=sprintf('ones(3,1)*(%s.noise_density*%s)^2*%s.BW',variable,scale,variable);
     set_param(noise,'Cov',power,'Ts',['1/' variable '.sample_rate']);
 end
 save_system(model);

@@ -13,7 +13,7 @@ settings.noise_true=noiseEnabled; settings.seed=seed;
 [input,variables]=hover.makeSimulationInput(settings,modelPath);
 assert(variables.bfSim.NavigationSensors==0,'The example must not use navigation measurements.');
 started=tic; output=sim(input); elapsed=toc(started);
-report=bf.hoverMetrics(output);
+report=bf.hoverMetrics(output,variables);
 report.Case=char(kind); report.Fidelity=char(fidelity); report.WallSeconds=elapsed;
 report.NavigationMeasurements=false; report.NoiseEnabled=settings.noise_true; report.Seed=settings.seed;
 report.CorrectedFlightInterfaces=bf.flightInterfacesReady();

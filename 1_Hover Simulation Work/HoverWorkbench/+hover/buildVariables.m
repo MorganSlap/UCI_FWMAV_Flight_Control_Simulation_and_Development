@@ -15,7 +15,7 @@ names = {'m','I','S','wing_type','C11','C21','g','rho', ...
     'accel','gyro','tau_wing','mahoney','noise_true','seed', ...
     'roll_P','roll_I','roll_D','pitch_P','pitch_I','pitch_D', ...
     'yaw_P','yaw_I','yaw_D','strength','max_pot','X0','Xref', ...
-    'MMA','sim_fidelity','t_sim'};
+    'MMA','sim_fidelity','t_sim','drag_enabled'};
 variables = struct();
 for k = 1:numel(names)
     variables.(names{k}) = settings.(names{k});
@@ -48,6 +48,10 @@ if ~v.noise_true
     v.mahoney.Ki = 0;
 end
 
+if isfield(v,'drag_enabled') && ~v.drag_enabled
+    v.CDx=0; v.CDy=0; v.CDz=0; v.CDw=0;
+    v.use_time_constant_damping=false;
+end
 v.Xu = v.rho*v.CDx*v.Ax*v.v_ref;
 v.Yv = v.rho*v.CDy*v.Ay*v.v_ref;
 v.Zw = v.rho*v.CDz*v.Az*v.w_ref;

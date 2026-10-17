@@ -57,8 +57,8 @@ q_ref = 1.00;      % [rad/s]
 r_ref = 1.00;      % [rad/s]
 
 % Drag coefficient guesses (tunable knobs)
-CDx = 1.0*0;  CDy = 1.0*0;  CDz = 1.0*0;        % translational
-CDw = 1.0*0;                               % rotational (lumped)
+CDx = 1.0;  CDy = 1.0;  CDz = 1.0;        % translational
+CDw = 1.0;                               % rotational (lumped)
 
 % Effective projected areas (tunable knobs)
 Ax = 0.50*Aref;     % [m^2] effective frontal area in body x
@@ -533,11 +533,14 @@ imu_nonlinear = strcmp(sim_fidelity,'high'); % numeric parameter for the IMU cha
 t_sim = 10; % [sec] decide how long you want to simulate flight
 % The native firmware owns the PID, filters, estimator, modes and mixer.
 % Legacy roll_P/mahoney values above are retained for old run comparisons;
+% accel.LPF_set and gyro.LPF_set also belong to the replaced estimator.
+% Native filters/gains are configured through bfConfig (acc_lpf_hz,
+% gyro_lpf* and imu_dcm_kp/ki), or the workbench's Attitude estimator page.
 % they do not configure Betaflight. All firmware settings live in bfConfig.
 if ~exist('bfConfig','var') || isempty(bfConfig)
     bfConfig = bf.hoverConfig(max_pot);
 end
-bfSim = bf.simulationOptions(struct('Ts',Ts,'u0',u0,'X0',X0,'gyro',gyro,'accel',accel,'noise_true',noise_true,'g',g),bfConfig);
+bfSim = bf.simulationOptions(struct('Ts',Ts,'u0',u0,'X0',X0,'gyro',gyro,'accel',accel,'noise_true',noise_true,'g',g,'seed',seed),bfConfig);
 % Set bfSim.CommandMode to 'rate' for Xref(10:12), or 'receiver' to supply
 % raw AETR/AUX channels. ANGLE uses Xref(7:8) and yaw rate Xref(12).
 bfRc = bf.receiverChannels(bfSim);

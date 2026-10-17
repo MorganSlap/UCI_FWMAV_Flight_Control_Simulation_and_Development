@@ -139,9 +139,9 @@ static void feedIMU(const double *request)
        Specific force is -g on body Z at level rest. No truth quaternion is
        passed to imuSetAttitude*; the real estimator consumes these sensors. */
     virtualGyroSet(virtualGyroDev,
-        sensorCount(request[5] * BF_HOST_RAD_TO_DEG * 16.4),
-        sensorCount(request[6] * BF_HOST_RAD_TO_DEG * 16.4),
-        sensorCount(request[7] * BF_HOST_RAD_TO_DEG * 16.4));
+        sensorCount(request[5] * BF_HOST_RAD_TO_DEG / (double)virtualGyroDev->scale),
+        sensorCount(request[6] * BF_HOST_RAD_TO_DEG / (double)virtualGyroDev->scale),
+        sensorCount(request[7] * BF_HOST_RAD_TO_DEG / (double)virtualGyroDev->scale));
     virtualAccSet(virtualAccDev,
         sensorCount(-request[8] * 256.0 / BF_HOST_G),
         sensorCount(-request[9] * 256.0 / BF_HOST_G),

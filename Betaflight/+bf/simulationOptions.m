@@ -9,14 +9,23 @@ options=struct('SampleTime',variables.Ts,'TrimPot',variables.u0, ...
     'Timeout',5,'NavigationSensors',0,'RcRateHz',100,'UseKnownAccelCalibration',false, ...
     'CommandMode','angle','ThrottlePWM',variables.u0, ...
     'MotorOrder',[1 2 3 4],'TraceFile','', ...
-    'ReceiverPWM',[],'StartupReceiverPWM',[]);
+    'ReceiverPWM',[],'StartupReceiverPWM',[],'ReferenceSchedule',zeros(0,4));
 options.ReceiverLayout=bf.receiverLayout(config);
 options.CalibrationGyro=zeros(3,1); options.CalibrationAccelBias=zeros(3,1);
+options.CalibrationGyroNoiseStd=0; % rad/s RMS, before native ADC quantization
+options.CalibrationGyroSampleTime=variables.Ts;
+options.CalibrationSeed=0;
+if isfield(variables,'seed'), options.CalibrationSeed=variables.seed; end
 options.Gravity=9.81;
 if isfield(variables,'g'), options.Gravity=variables.g; end
 if isfield(variables,'noise_true') && variables.noise_true
     if isfield(variables,'gyro') && isfield(variables.gyro,'bias')
         options.CalibrationGyro=variables.gyro.bias(:)*pi/180;
+    end
+    if isfield(variables,'gyro') && all(isfield(variables.gyro,{'noise_density','BW','sample_rate'}))
+        % Match the restored noise mask: variance = density^2 * BW / Ts.
+        options.CalibrationGyroNoiseStd=variables.gyro.noise_density*pi/180*sqrt(variables.gyro.BW*variables.gyro.sample_rate);
+        options.CalibrationGyroSampleTime=1/variables.gyro.sample_rate;
     end
     if isfield(variables,'accel') && isfield(variables.accel,'bias')
         options.CalibrationAccelBias=variables.accel.bias(:)*options.Gravity;

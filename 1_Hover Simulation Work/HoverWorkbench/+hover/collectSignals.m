@@ -22,6 +22,14 @@ stateUnits = {'m','m','m','m/s','m/s','m/s', ...
 [firmwareTime,firmwareData] = readKnown('betaflight_diagnostics',40);
 if ~isempty(firmwareData)
     axes={'Roll','Pitch','Yaw'}; terms={'P','I','D','F'};
+    if isfield(variables,'bfSim') && isfield(variables,'Xref')
+        [commands,commandKeys,commandUnits]=bf.commandSeries(firmwareTime,variables.Xref,variables.bfSim);
+        for axis=1:numel(commandKeys)
+            add(['command.' commandKeys{axis}],['Requested ' axes{axis}], ...
+                'Requested commands',commandUnits{axis},firmwareTime,commands(:,axis), ...
+                'Saved Xref + ReferenceSchedule (before native receiver processing)');
+        end
+    end
     for motor=1:4
         add(sprintf('betaflight.motor%d',motor),sprintf('Firmware motor %d',motor), ...
             'Betaflight motors','us',firmwareTime,firmwareData(:,5+motor),'betaflight_diagnostics');
@@ -71,7 +79,14 @@ if ~isempty(controlData)
 end
 if ~isempty(trueData)
     add('derived.altitude','Altitude','Derived','m',trueTime,-trueData(:,3),'state_output');
-    add('derived.altitude_rate','Altitude rate','Derived','m/s',trueTime,-trueData(:,6),'state_output');
+    downSpeed=-sin(trueData(:,8)).*trueData(:,4) ...
+        +sin(trueData(:,7)).*cos(trueData(:,8)).*trueData(:,5) ...
+        +cos(trueData(:,7)).*cos(trueData(:,8)).*trueData(:,6);
+    if isfield(variables,'sim_fidelity') && strcmp(variables.sim_fidelity,'low')
+        % The hover-linearized position equation is directly zdot = w.
+        downSpeed=trueData(:,6);
+    end
+    add('derived.altitude_rate','Altitude rate','Derived','m/s',trueTime,-downSpeed,'state_output (body to NED velocity)');
     addDegrees(trueTime,trueData,'state','True', 'state_output');
 end
 if ~isempty(estData)
@@ -85,6 +100,7 @@ if ~isempty(trueData) && ~isempty(estData)
         trueOnEst = interp1(uniqueTime,trueData(indices,:),estTime,'linear','extrap');
     end
     errorData = trueOnEst-estData;
+    errorData(:,7:9)=atan2(sin(errorData(:,7:9)),cos(errorData(:,7:9)));
     for k = 1:12
         add(['error.' stateKeys{k}],[stateNames{k} ' error'], ...
             'Estimation error',stateUnits{k},estTime,errorData(:,k), ...
@@ -110,6 +126,10 @@ for k = 1:numel(outputNames)
             'Could not normalize %s; raw output is preserved: %s',name,exception.message);
     end
 end
+
+gravity=9.81;
+if isfield(variables,'g'), gravity=variables.g; end
+signals=hover.addImuSignals(signals,gravity);
 
     function [time,data] = readKnown(name,width)
         value = getMember(simOut,name);

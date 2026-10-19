@@ -2,6 +2,8 @@ function schema = settingsSchema()
 %SETTINGSSCHEMA Editable inputs from lin_hover.m, with units and UI metadata.
 % Derived matrices, filter coefficients, trim and stability derivatives are
 % rebuilt by hover.buildVariables. No initialization script is executed.
+% Defaults remain in stored/simulation units. Unit describes the UI; angular
+% display conversion is handled by hover.angularInputValue.
 
 schema = struct('Key',{},'Label',{},'Group',{},'Unit',{},'Default',{}, ...
     'Kind',{},'Choices',{},'Help',{});
@@ -61,9 +63,9 @@ add('tau_q','Pitch decay time','Aerodynamic damping','s',0.20);
 add('tau_r','Yaw decay time','Aerodynamic damping','s',0.40);
 add('v_ref','Horizontal reference speed','Aerodynamic damping','m/s',0.50);
 add('w_ref','Vertical reference speed','Aerodynamic damping','m/s',0.50);
-add('p_ref','Roll reference rate','Aerodynamic damping','rad/s',1);
-add('q_ref','Pitch reference rate','Aerodynamic damping','rad/s',1);
-add('r_ref','Yaw reference rate','Aerodynamic damping','rad/s',1);
+add('p_ref','Roll reference rate','Aerodynamic damping','deg/s',1);
+add('q_ref','Pitch reference rate','Aerodynamic damping','deg/s',1);
+add('r_ref','Yaw reference rate','Aerodynamic damping','deg/s',1);
 add('CDx','Body x drag coefficient','Aerodynamic damping','',1);
 add('CDy','Body y drag coefficient','Aerodynamic damping','',1);
 add('CDz','Body z drag coefficient','Aerodynamic damping','',1);
@@ -102,9 +104,10 @@ add('mahoney.Ki','Mahoney integral gain','Sensors and estimator','',0.05,'number
 x0 = zeros(12,1);
 x0(7) = 5*pi/180;
 stateHelp = ['12-by-1 state order: x, y, z, u, v, w, phi, theta, psi, p, q, r. ' ...
-    'Position: m; velocity: m/s; angles: rad; rates: rad/s. z and w are positive down.'];
-add('X0','Initial state','Initial conditions','SI',x0,'matrix',{},stateHelp);
-add('Xref','Reference state','Reference command','SI',zeros(12,1),'matrix',{},stateHelp);
+    'Enter position in m, velocity in m/s, angles in deg and rates in deg/s. ' ...
+    'Angular entries convert to radians for storage and simulation. z and w are positive down.'];
+add('X0','Initial state','Initial conditions','m, m/s, deg, deg/s',x0,'matrix',{},stateHelp);
+add('Xref','Reference state','Reference command','m, m/s, deg, deg/s',zeros(12,1),'matrix',{},stateHelp);
 
     function add(key,label,group,unit,value,kind,choices,helpText)
         if nargin < 6, kind = 'number'; end

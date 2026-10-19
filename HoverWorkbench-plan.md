@@ -85,3 +85,44 @@ complementary angle/rate feedback, estimator error, native rate PID terms,
 actuator outputs and raw sensor error explicitly. Add all-six-panel tests for
 angle/rate modes, missing historical logs, Home/zoom and app error reporting;
 verify the user's saved hover and inspect the updated page and undocked figure.
+
+## Angular inputs and ANGLE control (2026-10-18)
+
+Keep the App Designer shell and external controller architecture. Add the native
+ANGLE P gain to Run setup, using the selected firmware PID profile and the same
+CLI storage as Configurator. Render initial and reference state tables across
+the content area with a compact value column next to named state rows.
+Use degrees/degree-per-second for angular UI inputs, converting at the UI boundary
+while retaining SI state, reference-rate and sequence storage for preset compatibility.
+Cover all six angular state entries, aerodynamic reference rates, sequence times,
+profile-specific firmware propagation, and preset reloads in MATLAB MCP tests.
+Inspect both state pages and Run setup in the app. Update the presentation's
+wording and affected screenshots to match. References: matlab-build-app editing
+guide and UIFigure grid-layout reference; matlab-write-tests and matlab-run-tests;
+Presentations template-following and finalization references.
+
+Completed validation: 10 new angular-control tests and 52 existing settings,
+firmware, flight-workflow and stability tests passed through MATLAB MCP.
+A 0.5-second nonlinear simulation with noise enabled confirmed UI inputs of
+5 deg roll and -3 deg pitch at the initial plant sample, with 119 logged signals.
+The test also supplied a 2 deg / -1 deg constant reference through the UI.
+Both Simulink model dirty flags remained off. All new helpers, schema and tests
+pass Code Analyzer without messages; the controller retains its existing style
+warnings. The revised 30-slide guide preserves the original design and includes
+current Run setup/state-table screenshots and descriptive explanations.
+
+## Main Settings PID page (2026-10-18)
+
+Extend the existing controller with a PID page immediately after Run setup.
+Use a grid of Roll/Pitch/Yaw rows and native P/I/D/F columns, a native PID-profile
+selector, and separate ANGLE-mode and simplified-tuning controls. Move ANGLE P
+off Run setup. Reuse the current firmware validation, preset storage and
+Configurator synchronization. Keep native gains distinct from torque gains.
+References: matlab-build-app editing guide and UIFigure grid-layout reference.
+Verify every rate-gain mapping, selected-profile isolation, preset round trip,
+Configurator synchronization and actual native firmware readback with MATLAB MCP.
+
+Completed: all 23 PID, angular-input and stability tests passed. Native readback
+verified all 12 rate gains and isolated edits in profile 1 from profile 0.
+The new schema and tests have no Code Analyzer messages. Inspected the rendered
+1440-by-900 PID page and left the updated app open on that page.

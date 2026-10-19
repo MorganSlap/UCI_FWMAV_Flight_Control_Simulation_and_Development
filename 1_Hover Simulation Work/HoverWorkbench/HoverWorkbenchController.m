@@ -54,7 +54,8 @@ classdef HoverWorkbenchController < handle
                     'gyro.sample_rate','gyro.noise_density','gyro.bias','gyro.vibration'}];
             end
             obj.Schema=obj.Schema(~ismember({obj.Schema.Key},oldKeys));
-            obj.Schema=[hover.nativeAttitudeSchema(),hover.nativeGyroSchema(obj.Settings.Betaflight),obj.Schema];
+            obj.Schema=[hover.nativePidSchema(obj.Settings.Betaflight), ...
+                hover.nativeAttitudeSchema(),hover.nativeGyroSchema(obj.Settings.Betaflight),obj.Schema];
             obj.DataRoot = fullfile(fileparts(mfilename('fullpath')), 'data');
             if ~isfolder(obj.DataRoot), mkdir(obj.DataRoot); end
             obj.ParameterEditors = containers.Map('KeyType','char','ValueType','any');
@@ -112,8 +113,8 @@ classdef HoverWorkbenchController < handle
             obj.UI.SearchSettings = uieditfield(side,'text','Placeholder','Find a parameter...', ...
                 'ValueChangedFcn',@(~,~)obj.renderSettings());
             groups = unique(string({obj.Schema.Group}),'stable');
-            groups(groups=="Simulation")=[];
-            obj.UI.Groups = uilistbox(side,'Items',cellstr(["Run setup","Firmware interface","Receiver channels",groups,"Derived values"]), ...
+            groups(ismember(groups,["Simulation","Run setup","PID"]))=[];
+            obj.UI.Groups = uilistbox(side,'Items',cellstr(["Run setup","PID","Firmware interface","Receiver channels",groups,"Derived values"]), ...
                 'ValueChangedFcn',@(~,~)obj.renderSettings());
             uibutton(side,'Text','Save preset...','ButtonPushedFcn',@(~,~)obj.savePreset());
             uibutton(side,'Text','Load preset...','ButtonPushedFcn',@(~,~)obj.loadPreset());
@@ -121,7 +122,7 @@ classdef HoverWorkbenchController < handle
             uibutton(side,'Text','Reset to script defaults','ButtonPushedFcn',@(~,~)obj.resetSettings());
             obj.UI.PresetStatus = uilabel(side,'Text','Level hover: IMU only, fixed throttle, noise ON','WordWrap','on');
             uilabel(side,'Text',sprintf(['Inputs are saved with every run.\n' ...
-                'Open Betaflight Configurator for PID, filters, rates, modes and mixer settings.']), ...
+                'Use PID for gains. Open Betaflight Configurator for advanced firmware settings.']), ...
                 'WordWrap','on','FontSize',11);
             main = uigridlayout(g,[4 1]);
             main.RowHeight = {32,42,'1x',66}; main.Padding = [0 0 0 0];
@@ -185,6 +186,9 @@ classdef HoverWorkbenchController < handle
             if group == "Run setup" && strlength(query)==0
                 obj.renderFlightTest(); return
             end
+            if group == "PID" && strlength(query)==0
+                obj.renderPid(); return
+            end
             if group == "Derived values" && strlength(query)==0
                 obj.renderDerived(); return
             end
@@ -201,6 +205,9 @@ classdef HoverWorkbenchController < handle
                     'Kp/Ki are shown as physical gains; the native CLI stores gain times 10000.'];
             elseif group=="Sensors and estimator" && strlength(query)==0
                 obj.renderSensors(); return
+            elseif any(group==["Initial conditions","Reference command"]) && strlength(query)==0
+                obj.UI.GroupHelp.Text=['Enter angles in degrees and body rates in degrees per second. ' ...
+                    'The simulation uses radians. Position z and body velocity w are positive down.'];
             end
             obj.renderFields(obj.UI.EditorPanel,entries);
         end
@@ -216,9 +223,25 @@ classdef HoverWorkbenchController < handle
             g.Padding = [0 6 14 6]; g.RowSpacing = 12; g.Scrollable = 'on';
             for k=1:n
                 e = entries(k); key = char(e.Key); value = obj.getSetting(key);
+                tip = sprintf('%s\n%s',key,char(e.Help));
+                if any(strcmp(key,{'X0','Xref'}))
+                    stateGrid=uigridlayout(g,[2 1]);
+                    stateGrid.Layout.Row=k; stateGrid.Layout.Column=[1 3];
+                    stateGrid.RowHeight={'fit','1x'}; stateGrid.Padding=[0 0 0 0];
+                    uilabel(stateGrid,'Text',char(e.Label),'FontWeight','bold','Tooltip',tip);
+                    control=uitable(stateGrid,'Data',value,'ColumnEditable',true, ...
+                        'ColumnName',{'Value'},'ColumnWidth',{160},'ColumnFormat',{'numeric'}, ...
+                        'RowName',{'x [m]','y [m]','z down [m]','u [m/s]','v [m/s]', ...
+                        'w [m/s]','Roll [deg]','Pitch [deg]','Yaw [deg]', ...
+                        'Roll rate p [deg/s]','Pitch rate q [deg/s]','Yaw rate r [deg/s]'}, ...
+                        'Tooltip',tip,'CellEditCallback',@(src,ev)obj.editMatrix(key,src,ev));
+                    if obj.Busy, control.Enable='off'; end
+                    obj.ParameterEditors(key)=control;
+                    continue
+                end
                 label = uilabel(g,'Text',char(e.Label),'WordWrap','on');
                 label.Layout.Row=k; label.Layout.Column=1;
-                tip = sprintf('%s\n%s',key,char(e.Help)); label.Tooltip=tip;
+                label.Tooltip=tip;
                 switch char(e.Kind)
                     case 'logical'
                         control = uicheckbox(g,'Text','Enabled','Value',logical(value), ...
@@ -235,12 +258,7 @@ classdef HoverWorkbenchController < handle
                     case 'matrix'
                         control = uitable(g,'Data',value,'ColumnEditable',true(1,size(value,2)), ...
                             'CellEditCallback',@(src,ev)obj.editMatrix(key,src,ev));
-                        if any(strcmp(key,{'X0','Xref'}))
-                            control.RowName={'x [m]','y [m]','z down [m]','u [m/s]','v [m/s]', ...
-                                'w [m/s]','roll [rad]','pitch [rad]','yaw [rad]', ...
-                                'p [rad/s]','q [rad/s]','r [rad/s]'};
-                            control.ColumnName={'Value'};
-                        elseif strcmp(key,'I')
+                        if strcmp(key,'I')
                             control.RowName={'x','y','z'}; control.ColumnName={'x','y','z'};
                         end
                     otherwise
@@ -265,8 +283,74 @@ classdef HoverWorkbenchController < handle
             gyroPanel=uipanel(g,'Title','GYROSCOPE  |  angular velocity','FontWeight','bold');
             accelPanel=uipanel(g,'Title','ACCELEROMETER  |  specific force','FontWeight','bold');
             keys=string({obj.Schema.Key});
-            obj.renderFields(gyroPanel,obj.Schema(startsWith(keys,'gyro.') | startsWith(keys,'firmware.')));
+            obj.renderFields(gyroPanel,obj.Schema(startsWith(keys,'gyro.') | ...
+                (startsWith(keys,'firmware.') & string({obj.Schema.Group})=="Sensors and estimator")));
             obj.renderFields(accelPanel,obj.Schema(startsWith(keys,'accel.') | keys=="native.acc_lpf_hz"));
+        end
+
+        function renderPid(obj)
+            obj.UI.GroupHelp.Text=['Native Betaflight gains for the selected PID profile. ' ...
+                'Edits apply directly to the next run and are saved with presets and results.'];
+            g=uigridlayout(obj.UI.EditorPanel,[5 1]);
+            g.RowHeight={36,214,110,72,'1x'}; g.Padding=[8 8 16 8]; g.RowSpacing=16; g.Scrollable='on';
+            bar=uigridlayout(g,[1 4]); bar.ColumnWidth={90,90,'1x',190}; bar.Padding=[0 0 0 0];
+            uilabel(bar,'Text','PID profile','FontWeight','bold');
+            profiles=bf.cliProfiles(obj.Settings.Betaflight.CLI,obj.FirmwareSchema);
+            indexes=unique([profiles.profile profiles.SelectedProfile],'stable');
+            obj.UI.PidProfile=uidropdown(bar,'Items',cellstr(string(indexes)), ...
+                'ItemsData',indexes,'Value',profiles.SelectedProfile, ...
+                'Tooltip','Select the native firmware PID profile used by the next run.', ...
+                'ValueChangedFcn',@(src,~)obj.selectPidProfile(src.Value));
+            uilabel(bar,'Text','Shared with Betaflight Configurator','WordWrap','on');
+            advanced=uibutton(bar,'Text','Open full Configurator', ...
+                'ButtonPushedFcn',@(~,~)obj.openFirmware());
+            obj.ParameterEditors('pidProfile')=obj.UI.PidProfile;
+            obj.ParameterEditors('pidConfigurator')=advanced;
+
+            panel=uipanel(g,'Title','RATE CONTROLLER','FontWeight','bold');
+            gains=uigridlayout(panel,[4 5]); gains.ColumnWidth={90,'1x','1x','1x','1x'};
+            gains.RowHeight={32,40,40,40}; gains.RowSpacing=6; gains.Padding=[12 10 12 10];
+            headers={'Axis','Proportional / P','Integral / I','Derivative / D','Feedforward / F'};
+            for column=1:numel(headers)
+                uilabel(gains,'Text',headers{column},'FontWeight','bold','WordWrap','on');
+            end
+            axes={'roll','pitch','yaw'}; terms={'p','i','d','f'};
+            for axis=1:numel(axes)
+                uilabel(gains,'Text',upper(axes{axis}),'FontWeight','bold');
+                for term=1:numel(terms)
+                    key=['firmware.' terms{term} '_' axes{axis}];
+                    entry=obj.Schema(strcmp({obj.Schema.Key},key));
+                    control=uieditfield(gains,'numeric','Value',obj.getSetting(key), ...
+                        'FontSize',17,'ValueDisplayFormat','%.0f','Tooltip',entry.Help, ...
+                        'ValueChangedFcn',@(src,~)obj.editSetting(key,src.Value));
+                    obj.ParameterEditors(key)=control;
+                end
+            end
+            sections=uigridlayout(g,[1 2]); sections.Padding=[0 0 0 0];
+            angle=uipanel(sections,'Title','ATTITUDE CONTROL / ANGLE MODE','FontWeight','bold');
+            tuning=uipanel(sections,'Title','GAIN CALCULATION','FontWeight','bold');
+            obj.renderFields(angle,obj.Schema(strcmp({obj.Schema.Key},'firmware.angle_p_gain')));
+            obj.renderFields(tuning,obj.Schema(strcmp({obj.Schema.Key},'firmware.simplified_pids_mode')));
+            uilabel(g,'Text',['ANGLE P converts roll/pitch angle error into a rate target in ANGLE mode. ' ...
+                'The rate gains above control angular velocity in both ANGLE and RATE modes. ' ...
+                'Simplified tuning OFF keeps manual gains; enabled modes can recalculate them. ' ...
+                'The default plant has no yaw control authority.'], ...
+                'WordWrap','on','VerticalAlignment','top');
+            if obj.Busy
+                controls=obj.ParameterEditors.values;
+                for k=1:numel(controls), controls{k}.Enable='off'; end
+            end
+        end
+
+        function selectPidProfile(obj,index)
+            if obj.Busy, return; end
+            try
+                obj.Settings.Betaflight=bf.selectProfile(obj.Settings.Betaflight,'profile',index);
+                obj.syncFirmwareEditor(); obj.renderSettings();
+                obj.UI.PresetStatus.Text=sprintf('Selected PID profile %d',index);
+            catch err
+                obj.renderSettings(); obj.showError(err.message);
+            end
         end
 
         function renderDerived(obj)
@@ -407,8 +491,8 @@ classdef HoverWorkbenchController < handle
         end
 
         function renderFlightTest(obj)
-            obj.UI.GroupHelp.Text=['Choose a complete case, then adjust duration, fidelity, noise, drag, flight mode and throttle here. ' ...
-                'Initial conditions and constant references have their own pages.'];
+            obj.UI.GroupHelp.Text=['Choose a case, then set duration, fidelity, noise, drag, flight mode and throttle. ' ...
+                'Controller gains are on PID. Initial conditions and constant references have their own pages.'];
             v=hover.buildVariables(obj.Settings); mode=v.bfSim.CommandMode;
             g=uigridlayout(obj.UI.EditorPanel,[8 1]);
             g.RowHeight={42,170,44,48,30,180,36,72}; g.Padding=[8 8 16 8]; g.Scrollable='on';
@@ -438,7 +522,7 @@ classdef HoverWorkbenchController < handle
             uilabel(g,'Text','COMMAND SEQUENCE  /  each row holds until the next time','FontWeight','bold');
             data=v.bfSim.ReferenceSchedule;
             if isempty(data), data=zeros(0,4); end
-            data(:,2:4)=data(:,2:4)*180/pi;
+            data=hover.angularInputValue('FirmwareAdapter.ReferenceSchedule',data,'display');
             if strcmp(mode,'angle'), columns={'Time [s]','Roll [deg]','Pitch [deg]','Yaw rate [deg/s]'};
             else, columns={'Time [s]','Roll rate [deg/s]','Pitch rate [deg/s]','Yaw rate [deg/s]'}; end
             obj.UI.Sequence=uitable(g,'Data',data,'ColumnName',columns,'RowName',{}, ...
@@ -481,7 +565,7 @@ classdef HoverWorkbenchController < handle
         function editSequence(obj,data)
             if obj.Busy, return; end
             candidate=obj.Settings;
-            data(:,2:4)=data(:,2:4)*pi/180;
+            data=hover.angularInputValue('FirmwareAdapter.ReferenceSchedule',data,'simulation');
             candidate.FirmwareAdapter.ReferenceSchedule=data;
             try
                 hover.buildVariables(candidate);
@@ -518,9 +602,9 @@ classdef HoverWorkbenchController < handle
                 try
                     schema=obj.FirmwareSchema;
                     item=schema(strcmp({schema.Name},extractAfter(key,'firmware.')));
-                    obj.Settings.Betaflight=bf.setSetting(obj.Settings.Betaflight,item(1),value,0);
+                    obj.Settings.Betaflight=bf.setSetting(obj.Settings.Betaflight,item(1),value,obj.firmwareIndex(item(1).Scope));
                     obj.syncFirmwareEditor(); obj.renderSettings();
-                    obj.UI.PresetStatus.Text='Modified native gyro filter';
+                    obj.UI.PresetStatus.Text=['Modified native firmware setting: ' item(1).Name];
                 catch err
                     obj.renderSettings(); obj.showError(err.message);
                 end
@@ -538,6 +622,7 @@ classdef HoverWorkbenchController < handle
                 end
                 return
             end
+            value=hover.angularInputValue(key,value,'simulation');
             parts=strsplit(key,'.');
             if numel(parts)==1
                 obj.Settings.(parts{1})=value;
@@ -569,7 +654,7 @@ classdef HoverWorkbenchController < handle
         end
 
         function editMatrix(obj,key,control,event)
-            if ~isempty(event.Error) || ~isnumeric(control.Data) || any(~isfinite(control.Data(:)))
+            if ~isempty(event.Error) || ~isnumeric(control.Data) || ~isreal(control.Data) || any(~isfinite(control.Data(:)))
                 control.Data=obj.getSetting(key);
                 obj.showError('Enter finite numeric values in the table.'); return
             end
@@ -577,10 +662,11 @@ classdef HoverWorkbenchController < handle
         end
 
         function v=getSetting(obj,key)
+            % UI-facing values. Settings and archived inputs retain SI units.
             if startsWith(key,'firmware.')
                 schema=obj.FirmwareSchema;
                 item=schema(strcmp({schema.Name},extractAfter(key,'firmware.')));
-                v=bf.settingValue(obj.Settings.Betaflight.CLI,item(1),0);
+                v=bf.settingValue(obj.Settings.Betaflight.CLI,item(1),obj.firmwareIndex(item(1).Scope));
                 if ~strcmp(item(1).Type,'choice'), v=str2double(v); end
                 return
             end
@@ -590,6 +676,17 @@ classdef HoverWorkbenchController < handle
             end
             parts=strsplit(key,'.'); v=obj.Settings.(parts{1});
             if numel(parts)>1, v=v.(parts{2}); end
+            v=hover.angularInputValue(key,v,'display');
+        end
+
+        function index=firmwareIndex(obj,scope)
+            profiles=bf.cliProfiles(obj.Settings.Betaflight.CLI,obj.FirmwareSchema);
+            switch scope
+                case 'profile', index=profiles.SelectedProfile;
+                case 'rateprofile', index=profiles.SelectedRateprofile;
+                case 'battery_profile', index=profiles.SelectedBatteryprofile;
+                otherwise, index=0;
+            end
         end
 
         function savePreset(obj)

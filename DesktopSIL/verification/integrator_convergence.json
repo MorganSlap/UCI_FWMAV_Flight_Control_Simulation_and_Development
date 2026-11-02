@@ -1,0 +1,102 @@
+{
+  "solver": "ode5",
+  "default_maximum_step_s": 6.25e-05,
+  "ode3_vs_ode5_noisy_60s": {
+    "max_attitude_difference_deg": [
+      6.604223011391401e-12,
+      5.82637860710598e-12,
+      1.3897719433614498e-12
+    ],
+    "max_position_difference_m": [
+      2.1591617382910044e-11,
+      2.652456032592454e-11,
+      1.113331649094107e-12
+    ],
+    "max_rate_difference_radps": [
+      1.5322430824138422e-12,
+      1.5395601460355124e-12,
+      4.543688016979408e-16
+    ],
+    "final_roll_pitch_deg": [
+      0.019097410173233145,
+      -0.09559767989807821
+    ],
+    "final_position_m": [
+      -15.886186231182439,
+      16.21315039298596,
+      3.771467196802458
+    ],
+    "ode5_run": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_202423_620fd2",
+    "ode3_run": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_135237_26fe4a"
+  },
+  "signal_definitions": {
+    "true_minus_estimated_verified": true,
+    "mahony_input_taps_distinct_from_rate_feedback": true,
+    "mahony_accel_acceptance_fraction": 1.0
+  },
+  "step_halving_quiet_recovery": {
+    "max_attitude_difference_deg": [
+      2.1956083154416162e-11,
+      2.49954822799528e-11,
+      8.368834505600878e-14
+    ],
+    "max_position_difference_m": [
+      2.453898417797973e-09,
+      1.6405223846049921e-09,
+      6.682654429823742e-12
+    ],
+    "max_rate_difference_radps": [
+      2.3554021146704462e-15,
+      2.0903688936063647e-15,
+      1.7110065534536867e-18
+    ],
+    "final_roll_pitch_deg": [
+      0.0014523534683708087,
+      -0.03171526057567533
+    ],
+    "final_position_m": [
+      25.605347247024433,
+      28.52143426603398,
+      23.101662119769326
+    ],
+    "noise": false,
+    "duration_s": 300,
+    "runs": [
+      "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_202441_e28579",
+      "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_202457_4d75aa"
+    ]
+  },
+  "step_halving_noisy": {
+    "max_attitude_difference_deg": [
+      3.173229466462771e-11,
+      1.0611001315615413e-11,
+      4.76884417551936e-13
+    ],
+    "max_position_difference_m": [
+      6.380105332937092e-10,
+      1.0124239224751364e-09,
+      4.907718675895012e-11
+    ],
+    "max_rate_difference_radps": [
+      3.288168348714038e-15,
+      1.942890293094024e-15,
+      1.6303690168750773e-17
+    ],
+    "final_roll_pitch_deg": [
+      0.4002711325442954,
+      0.3262162634804535
+    ],
+    "final_position_m": [
+      -71.05425419034708,
+      81.77130485908779,
+      22.08654249804739
+    ],
+    "noise": true,
+    "duration_s": 300,
+    "runs": [
+      "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_202517_9fbe7f",
+      "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_202534_5ea7e4"
+    ]
+  },
+  "passed": true
+}

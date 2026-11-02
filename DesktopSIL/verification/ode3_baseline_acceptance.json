@@ -1,0 +1,127 @@
+{
+  "hover_60_seconds": {
+    "completed": true,
+    "stopped": false,
+    "simulation_seconds": 60,
+    "flight_wall_seconds": 3.1489019,
+    "total_wall_seconds": 3.1962863,
+    "speed_ratio": 19.0542614,
+    "plant_hz": 16000,
+    "firmware_hz": 4000,
+    "pid_hz": 4000,
+    "gyro_hz": 3200,
+    "accel_hz": 1600,
+    "log_hz_actual": 16000,
+    "trim_pot": 1816.10262009,
+    "linear": false,
+    "max_roll_pitch_deg": 1.451164273010542,
+    "final_z_m": 3.771467196802458,
+    "samples": 960001,
+    "archive_bytes": 230717210,
+    "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_135237_26fe4a"
+  },
+  "recovery": {
+    "completed": true,
+    "stopped": false,
+    "simulation_seconds": 20,
+    "flight_wall_seconds": 0.9855321,
+    "total_wall_seconds": 1.0321423,
+    "speed_ratio": 20.2936059,
+    "plant_hz": 16000,
+    "firmware_hz": 4000,
+    "pid_hz": 4000,
+    "gyro_hz": 3200,
+    "accel_hz": 1600,
+    "log_hz_actual": 16000,
+    "trim_pot": 1816.10262009,
+    "linear": false,
+    "initial_roll_pitch_deg": [
+      5.0,
+      -3.0000000000000004
+    ],
+    "final_roll_pitch_deg": [
+      1.0466033341945316,
+      0.9848231103555974
+    ]
+  },
+  "repeatability": {
+    "identical_samples": true,
+    "samples": 16001
+  },
+  "noise_toggle": {
+    "quiet_max_roll_rad": 0.0,
+    "noisy_raw_gyro_std_deg_s": 11.097528266202925
+  },
+  "runtime_settings": {
+    "angle_p_verified_in_native_dump": 25,
+    "initial_roll_deg": 2,
+    "all_drag_coefficients_zero": true
+  },
+  "pause_resume_stop": {
+    "completed": false,
+    "stopped": true,
+    "simulation_seconds": 0.65,
+    "flight_wall_seconds": 1.0579628,
+    "total_wall_seconds": 1.104856,
+    "speed_ratio": 0.614388332,
+    "plant_hz": 16000,
+    "firmware_hz": 4000,
+    "pid_hz": 4000,
+    "gyro_hz": 3200,
+    "accel_hz": 1600,
+    "log_hz_actual": 16000,
+    "trim_pot": 1816.10262009,
+    "linear": false
+  },
+  "expanded_configuration": {
+    "angle_sequence": {
+      "rows": 5,
+      "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_135300_e1858c",
+      "passed": true
+    },
+    "rate_sequence": {
+      "rows": 7,
+      "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_135303_129e56",
+      "passed": true
+    },
+    "profiles_linear_rates": {
+      "completed": true,
+      "stopped": false,
+      "simulation_seconds": 1,
+      "flight_wall_seconds": 0.0500589,
+      "total_wall_seconds": 0.0881811,
+      "speed_ratio": 19.9764677,
+      "plant_hz": 16000,
+      "firmware_hz": 4000,
+      "pid_hz": 1000,
+      "gyro_hz": 3000,
+      "accel_hz": 1000,
+      "log_hz_actual": 16000,
+      "trim_pot": 1816.10262009,
+      "linear": true,
+      "profiles": {
+        "profile": 1,
+        "rateprofile": 2,
+        "battery_profile": 1
+      }
+    },
+    "raw_receiver_custom_map": {
+      "map": "TAER1234",
+      "throttle_channel": 1,
+      "passed": true
+    },
+    "stop_during_calibration": {
+      "clean_exit": true
+    }
+  },
+  "original_firmware_replay": {
+    "exchanges": 29202,
+    "response_words_per_exchange": 40,
+    "exactly_equal": true,
+    "wall_seconds": 1.75
+  },
+  "plot_decimation": {
+    "extrema_preserved": true
+  },
+  "passed": true
+}

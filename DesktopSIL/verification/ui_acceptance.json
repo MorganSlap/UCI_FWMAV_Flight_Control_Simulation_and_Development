@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "repeated_runs": 3,
+  "pid_cli_roundtrip": true,
+  "profiles_catalog_commands": true,
+  "four_examples_and_script_defaults": true,
+  "default_filters_hz": 5,
+  "full_duration_reset": true,
+  "explore_add_and_remove": true,
+  "undock": true,
+  "default_views": 15,
+  "analysis_axes": 3,
+  "analysis_panels": 7,
+  "png_pdf_csv_mat_exports": true,
+  "matlab_run_import": true,
+  "startup_stop": true,
+  "callback_errors": []
+}

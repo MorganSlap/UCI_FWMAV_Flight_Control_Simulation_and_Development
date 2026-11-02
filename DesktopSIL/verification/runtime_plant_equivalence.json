@@ -1,0 +1,44 @@
+[
+  {
+    "Case": "high_0",
+    "MaximumAbsoluteError": 7.1054273576010019E-15,
+    "Samples": 16001,
+    "Passed": true
+  },
+  {
+    "Case": "high_1",
+    "MaximumAbsoluteError": 2.6867397195928788E-14,
+    "Samples": 16001,
+    "Passed": true
+  },
+  {
+    "Case": "low_0",
+    "MaximumAbsoluteError": 7.1054273576010019E-15,
+    "Samples": 16001,
+    "Passed": true
+  },
+  {
+    "Case": "low_1",
+    "MaximumAbsoluteError": 2.7255975254547593E-14,
+    "Samples": 16001,
+    "Passed": true
+  },
+  {
+    "Case": "high_retuned",
+    "MaximumAbsoluteError": 2.8421709430404007E-14,
+    "Samples": 16001,
+    "Passed": true
+  },
+  {
+    "Case": "low_retuned",
+    "MaximumAbsoluteError": 3.0198066269804258E-14,
+    "Samples": 16001,
+    "Passed": true
+  },
+  {
+    "Case": "high_flexible_rates",
+    "MaximumAbsoluteError": 2.9309887850104133E-14,
+    "Samples": 16001,
+    "Passed": true
+  }
+]

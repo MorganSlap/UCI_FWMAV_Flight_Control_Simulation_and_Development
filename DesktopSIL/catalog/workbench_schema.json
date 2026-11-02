@@ -1,0 +1,730 @@
+[
+  {
+    "Key": "sim_fidelity",
+    "Label": "Dynamics fidelity",
+    "Group": "Simulation",
+    "Unit": "",
+    "Default": "high",
+    "Kind": "choice",
+    "Choices": [
+      "high",
+      "low"
+    ],
+    "Help": "high: nonlinear dynamics; low: linearized hover dynamics."
+  },
+  {
+    "Key": "t_sim",
+    "Label": "Simulation duration",
+    "Group": "Simulation",
+    "Unit": "s",
+    "Default": 10,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "fs",
+    "Label": "Sensor sampling frequency",
+    "Group": "Simulation",
+    "Unit": "Hz",
+    "Default": 4000,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "The SITL build samples sensors at 4000 Hz. Set the PID/mixer divider in Betaflight Configurator; sensor sampling remains at 4000 Hz."
+  },
+  {
+    "Key": "noise_true",
+    "Label": "Enable simulated noise",
+    "Group": "Simulation",
+    "Unit": "",
+    "Default": true,
+    "Kind": "logical",
+    "Choices": [],
+    "Help": "Enables sensor noise, bias, vibration and wing uncertainty. Physical specific force remains active in either setting."
+  },
+  {
+    "Key": "seed",
+    "Label": "Noise seed",
+    "Group": "Simulation",
+    "Unit": "",
+    "Default": 23341,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Use the same seed for repeatable comparisons. Integer from 0 through 2^32-1."
+  },
+  {
+    "Key": "drag_enabled",
+    "Label": "Enable aerodynamic drag",
+    "Group": "Simulation",
+    "Unit": "",
+    "Default": true,
+    "Kind": "logical",
+    "Choices": [],
+    "Help": "Disabled: run variables CDx, CDy, CDz and CDw are all zero. Your entered coefficients are retained for re-enabling drag."
+  },
+  {
+    "Key": "roll_P",
+    "Label": "Roll P",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0.022,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "roll_I",
+    "Label": "Roll I",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0.005,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "roll_D",
+    "Label": "Roll D",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "pitch_P",
+    "Label": "Pitch P",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0.022113402061855667,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Default uses the script inertia ratio Iy/Ix. Editable independently thereafter."
+  },
+  {
+    "Key": "pitch_I",
+    "Label": "Pitch I",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0.005025773195876289,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Default uses the script inertia ratio Iy/Ix. Editable independently thereafter."
+  },
+  {
+    "Key": "pitch_D",
+    "Label": "Pitch D",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "yaw_P",
+    "Label": "Yaw P",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0.001,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "yaw_I",
+    "Label": "Yaw I",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0.001,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "yaw_D",
+    "Label": "Yaw D",
+    "Group": "Rate controller",
+    "Unit": "",
+    "Default": 0,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "strength",
+    "Label": "Angle mode strength",
+    "Group": "Rate controller",
+    "Unit": "%",
+    "Default": 50,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Outer attitude-loop strength, from 0 to 100."
+  },
+  {
+    "Key": "max_pot",
+    "Label": "Maximum throttle",
+    "Group": "Rate controller",
+    "Unit": "pot",
+    "Default": 1950,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Maximum pot value, from 1000 to 2000."
+  },
+  {
+    "Key": "m",
+    "Label": "Vehicle mass",
+    "Group": "Vehicle and wings",
+    "Unit": "kg",
+    "Default": 0.11,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "I",
+    "Label": "Inertia tensor",
+    "Group": "Vehicle and wings",
+    "Unit": "kg m^2",
+    "Default": [
+      [
+        0.00194,
+        0,
+        0
+      ],
+      [
+        0,
+        0.0019500000000000001,
+        0
+      ],
+      [
+        0,
+        0,
+        0.0037800000000000004
+      ]
+    ],
+    "Kind": "matrix",
+    "Choices": [],
+    "Help": "Symmetric positive definite 3-by-3 body inertia tensor. Diagonal entries define Ix, Iy, Iz."
+  },
+  {
+    "Key": "S",
+    "Label": "Thrust moment arm",
+    "Group": "Vehicle and wings",
+    "Unit": "m",
+    "Default": 0.11,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "wing_type",
+    "Label": "Wing size product",
+    "Group": "Vehicle and wings",
+    "Unit": "in^2",
+    "Default": 15,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "The script uses 5*3. Per-flapper wing area = pi*(4*wing_type)*0.00064516."
+  },
+  {
+    "Key": "C11",
+    "Label": "Thrust slope",
+    "Group": "Vehicle and wings",
+    "Unit": "N/pot",
+    "Default": 0.000458,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "C21",
+    "Label": "Thrust intercept",
+    "Group": "Vehicle and wings",
+    "Unit": "N",
+    "Default": -0.562,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "tau_wing",
+    "Label": "Wing time constant",
+    "Group": "Vehicle and wings",
+    "Unit": "s",
+    "Default": 0.045454545454545456,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "k_tau",
+    "Label": "Yaw effectiveness",
+    "Group": "Vehicle and wings",
+    "Unit": "N m/pot",
+    "Default": 0,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Yaw torque row = k_tau*[1 -1 1 -1]. Zero disables yaw authority."
+  },
+  {
+    "Key": "MMA",
+    "Label": "Mixer matrix",
+    "Group": "Vehicle and wings",
+    "Unit": "",
+    "Default": [
+      [
+        1,
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        -1,
+        0,
+        -1
+      ],
+      [
+        1,
+        0,
+        -1,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        -1
+      ]
+    ],
+    "Kind": "matrix",
+    "Choices": [],
+    "Help": "The active 4-by-4 MMA assignment in lin_hover.m. Rows correspond to the four actuators."
+  },
+  {
+    "Key": "g",
+    "Label": "Gravity",
+    "Group": "Environment",
+    "Unit": "m/s^2",
+    "Default": 9.81,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "rho",
+    "Label": "Air density",
+    "Group": "Environment",
+    "Unit": "kg/m^3",
+    "Default": 1.225,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "use_time_constant_damping",
+    "Label": "Use decay-time damping",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": false,
+    "Kind": "logical",
+    "Choices": [],
+    "Help": "Enabled: use inertia/tau for rate damping. Disabled: use equivalent quadratic drag."
+  },
+  {
+    "Key": "tau_p",
+    "Label": "Roll decay time",
+    "Group": "Aerodynamic damping",
+    "Unit": "s",
+    "Default": 0.2,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "tau_q",
+    "Label": "Pitch decay time",
+    "Group": "Aerodynamic damping",
+    "Unit": "s",
+    "Default": 0.2,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "tau_r",
+    "Label": "Yaw decay time",
+    "Group": "Aerodynamic damping",
+    "Unit": "s",
+    "Default": 0.4,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "v_ref",
+    "Label": "Horizontal reference speed",
+    "Group": "Aerodynamic damping",
+    "Unit": "m/s",
+    "Default": 0.5,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "w_ref",
+    "Label": "Vertical reference speed",
+    "Group": "Aerodynamic damping",
+    "Unit": "m/s",
+    "Default": 0.5,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "p_ref",
+    "Label": "Roll reference rate",
+    "Group": "Aerodynamic damping",
+    "Unit": "deg/s",
+    "Default": 1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "q_ref",
+    "Label": "Pitch reference rate",
+    "Group": "Aerodynamic damping",
+    "Unit": "deg/s",
+    "Default": 1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "r_ref",
+    "Label": "Yaw reference rate",
+    "Group": "Aerodynamic damping",
+    "Unit": "deg/s",
+    "Default": 1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "CDx",
+    "Label": "Body x drag coefficient",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": 1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "CDy",
+    "Label": "Body y drag coefficient",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": 1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "CDz",
+    "Label": "Body z drag coefficient",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": 1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "CDw",
+    "Label": "Rotational drag coefficient",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": 1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "AxFactor",
+    "Label": "Frontal area / Aref",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": 0.5,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Ax = this fraction * Aref; recomputed when wing size changes."
+  },
+  {
+    "Key": "AyFactor",
+    "Label": "Side area / Aref",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": 0.5,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Ay = this fraction * Aref; recomputed when wing size changes."
+  },
+  {
+    "Key": "AzFactor",
+    "Label": "Vertical area / Aref",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": 0.35,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Az = this fraction * Aref; recomputed when wing size changes."
+  },
+  {
+    "Key": "AomegaFactor",
+    "Label": "Swept area / Aref",
+    "Group": "Aerodynamic damping",
+    "Unit": "",
+    "Default": 1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Aomega = this fraction * Aref; recomputed when wing size changes."
+  },
+  {
+    "Key": "accel.range",
+    "Label": "Accelerometer total range",
+    "Group": "Sensors and estimator",
+    "Unit": "g",
+    "Default": 4,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "The script specifies twice the +/- accelerometer range. Conversion preserves its 9.81 factor."
+  },
+  {
+    "Key": "accel.resolution_bits",
+    "Label": "Accelerometer resolution",
+    "Group": "Sensors and estimator",
+    "Unit": "bits",
+    "Default": 16,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "accel.BW",
+    "Label": "Accelerometer bandwidth",
+    "Group": "Sensors and estimator",
+    "Unit": "Hz",
+    "Default": 740,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "accel.LPF_set",
+    "Label": "Accelerometer LPF cutoff",
+    "Group": "Sensors and estimator",
+    "Unit": "Hz",
+    "Default": 5,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "accel.sample_rate",
+    "Label": "Accelerometer output rate",
+    "Group": "Sensors and estimator",
+    "Unit": "Hz",
+    "Default": 1600,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "accel.noise_density",
+    "Label": "Accelerometer noise density",
+    "Group": "Sensors and estimator",
+    "Unit": "g/sqrt(Hz)",
+    "Default": 0.00016,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "accel.bias",
+    "Label": "Accelerometer bias [x y z]",
+    "Group": "Sensors and estimator",
+    "Unit": "g",
+    "Default": [
+      0.02,
+      0.02,
+      0.02
+    ],
+    "Kind": "matrix",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "accel.vibration",
+    "Label": "Accelerometer wing vibration",
+    "Group": "Sensors and estimator",
+    "Unit": "g",
+    "Default": 0.1,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "gyro.range",
+    "Label": "Gyroscope +/- range",
+    "Group": "Sensors and estimator",
+    "Unit": "deg/s",
+    "Default": 1000,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "gyro.resolution_bits",
+    "Label": "Gyroscope resolution",
+    "Group": "Sensors and estimator",
+    "Unit": "bits",
+    "Default": 16,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "gyro.BW",
+    "Label": "Gyroscope bandwidth",
+    "Group": "Sensors and estimator",
+    "Unit": "Hz",
+    "Default": 751,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "gyro.LPF_set",
+    "Label": "Gyroscope LPF cutoff",
+    "Group": "Sensors and estimator",
+    "Unit": "Hz",
+    "Default": 5,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "gyro.sample_rate",
+    "Label": "Gyroscope output rate",
+    "Group": "Sensors and estimator",
+    "Unit": "Hz",
+    "Default": 3200,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "gyro.noise_density",
+    "Label": "Gyroscope noise density",
+    "Group": "Sensors and estimator",
+    "Unit": "deg/s/sqrt(Hz)",
+    "Default": 0.007,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "gyro.bias",
+    "Label": "Gyroscope bias [x y z]",
+    "Group": "Sensors and estimator",
+    "Unit": "deg/s",
+    "Default": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "Kind": "matrix",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "gyro.vibration",
+    "Label": "Gyroscope wing vibration",
+    "Group": "Sensors and estimator",
+    "Unit": "deg/s",
+    "Default": 3.7,
+    "Kind": "number",
+    "Choices": [],
+    "Help": ""
+  },
+  {
+    "Key": "mahoney.Kp",
+    "Label": "Mahoney proportional gain",
+    "Group": "Sensors and estimator",
+    "Unit": "",
+    "Default": 0.25,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Used when noise is enabled. Noise-off behavior is fixed to 0.25, matching lin_hover.m."
+  },
+  {
+    "Key": "mahoney.Ki",
+    "Label": "Mahoney integral gain",
+    "Group": "Sensors and estimator",
+    "Unit": "",
+    "Default": 0.05,
+    "Kind": "number",
+    "Choices": [],
+    "Help": "Used when noise is enabled. Noise-off behavior is fixed to 0, matching lin_hover.m."
+  },
+  {
+    "Key": "X0",
+    "Label": "Initial state",
+    "Group": "Initial conditions",
+    "Unit": "m, m/s, deg, deg/s",
+    "Default": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.087266462599716474,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "Kind": "matrix",
+    "Choices": [],
+    "Help": "12-by-1 state order: x, y, z, u, v, w, phi, theta, psi, p, q, r. Enter position in m, velocity in m/s, angles in deg and rates in deg/s. Angular entries convert to radians for storage and simulation. z and w are positive down."
+  },
+  {
+    "Key": "Xref",
+    "Label": "Reference state",
+    "Group": "Reference command",
+    "Unit": "m, m/s, deg, deg/s",
+    "Default": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "Kind": "matrix",
+    "Choices": [],
+    "Help": "12-by-1 state order: x, y, z, u, v, w, phi, theta, psi, p, q, r. Enter position in m, velocity in m/s, angles in deg and rates in deg/s. Angular entries convert to radians for storage and simulation. z and w are positive down."
+  }
+]

@@ -31,6 +31,19 @@ def main():
         assert runner.fw_value(case,"angle_p_gain")=="20"
         assert runner.fw_value(case,"gyro_lpf1_static_hz")=="5"
         assert runner.fw_value(case,"acc_lpf_hz")=="5"
+        assert case['timing_profile']=='BMI270' and cfg.timing(case)['pid_hz']==3200
+        assert case['plant_hz']==16000
+        assert tuple(map(int,app.field_widgets['plant_hz'][0]['values']))==cfg.INTEGRATION_RATES
+        for rate in cfg.INTEGRATION_RATES:
+            app.fields['plant_hz'].set(str(rate)); assert app.collect()['plant_hz']==rate
+        app.fields['timing_profile'].set('Custom'); app.select_timing_profile()
+        app.fields['gyro.sample_rate'].set('8000'); app.fields['accel.sample_rate'].set('1000')
+        app.fw_fields['pid_process_denom'].set('4'); app.fw_fields['imu_process_denom'].set('1')
+        assert cfg.timing(app.collect())['pid_hz']==2000
+        assert '2000 Hz' in app.timing_summary.get()
+        app.fields['timing_profile'].set('BMI270'); app.select_timing_profile()
+        assert app.collect()['gyro']['sample_rate']==3200 and app.collect()['accel']['sample_rate']==800
+        app.preset('noisy_hover.json')
         app.fw_fields["angle_p_gain"].set("24")
         app.settings_tabs.select(5); app.update()
         assert "set angle_p_gain = 24" in app.cli.get("1.0","end")
@@ -62,11 +75,13 @@ def main():
         app.preset("noisy_hover.json")
         folders=[]
         for k in range(3):
+            app.fields['plant_hz'].set(str((3200,4000,6400)[k]))
             app.fields["duration"].set("0.5"); app.run()
             pump(app,lambda:not app.running,timeout=30)
             pump(app,lambda:app.data is not None and app.data_folder==app.folder,timeout=20)
             folders.append(app.folder)
             assert app.data["time_s"][-1]==.5
+            assert app.data.settings['plant_hz']==(3200,4000,6400)[k]
         app.pages.select(1); app.update()
         plot=app.default_plots["True attitude"]
         assert len(plot.series)==3
@@ -110,7 +125,7 @@ def main():
         pump(app,lambda:app.folder is not None); app.stop(); pump(app,lambda:not app.running,timeout=30)
         assert storage.read_json(app.folder/"engine_summary.json")["stopped"]
         assert not errors,errors
-        report={"passed":True,"repeated_runs":3,"pid_cli_roundtrip":True,"profiles_catalog_commands":True,"four_examples_and_script_defaults":True,"default_filters_hz":5,"full_duration_reset":True,"explore_add_and_remove":True,"undock":True,"default_views":len(app.groups),"analysis_axes":3,"analysis_panels":len(app.analysis_plots),"png_pdf_csv_mat_exports":True,"matlab_run_import":historical.exists(),"startup_stop":True,"callback_errors":errors}
+        report={"passed":True,"timing_profile_roundtrip":True,"repeated_runs":3,"pid_cli_roundtrip":True,"profiles_catalog_commands":True,"four_examples_and_script_defaults":True,"default_filters_hz":5,"full_duration_reset":True,"explore_add_and_remove":True,"undock":True,"default_views":len(app.groups),"analysis_axes":3,"analysis_panels":len(app.analysis_plots),"png_pdf_csv_mat_exports":True,"matlab_run_import":historical.exists(),"startup_stop":True,"callback_errors":errors}
         (runner.ROOT/"verification/ui_acceptance.json").write_text(json.dumps(report,indent=2)+"\n")
         print(json.dumps(report,indent=2))
     finally:

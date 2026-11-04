@@ -65,14 +65,50 @@ try {
     $hostFile = Join-Path $sourceRoot 'src/platform/SIMULATOR/bf_host.c'
     $makeFile = Join-Path $sourceRoot 'src/platform/SIMULATOR/mk/SITL.mk'
     $imuFile = Join-Path $sourceRoot 'src/main/flight/imu.c'
+    $gyroInitFile = Join-Path $sourceRoot 'src/main/sensors/gyro_init.c'
+    $schedulerFile = Join-Path $sourceRoot 'src/main/scheduler/scheduler.c'
+    $sitlFile = Join-Path $sourceRoot 'src/platform/SIMULATOR/sitl.c'
     $originalHost = [IO.File]::ReadAllText($hostFile)
     $originalMake = [IO.File]::ReadAllText($makeFile)
     $originalImu = [IO.File]::ReadAllText($imuFile)
+    $originalGyroInit = [IO.File]::ReadAllText($gyroInitFile)
+    $originalScheduler = [IO.File]::ReadAllText($schedulerFile)
+    $originalSitl = [IO.File]::ReadAllText($sitlFile)
     $utf8 = [Text.UTF8Encoding]::new($false)
     try {
         $hostText = $originalHost.Replace('    listenSocket = socket(AF_INET, SOCK_STREAM, 0);', "    if (getenv(`"BF_DESKTOP_CASE`")) { extern int desktopSilRun(void); exit(desktopSilRun()); }`n    listenSocket = socket(AF_INET, SOCK_STREAM, 0);")
         $hostText += "`nint bfDesktopStep(const double *request, double *response) {`n    int status = stepTo(request);`n    makeResponse(response, request, status);`n    return status;`n}`n"
+        $hostText += "`n" + [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'native/firmware_timing.inc'))
+        $hostText = $hostText.Replace('#define BF_HOST_QUANTUM_US 10U', "extern int bfDesktopSynchronizedClock(void);`n#define BF_HOST_QUANTUM_US (bfDesktopSynchronizedClock() ? 1U : 10U)")
         [IO.File]::WriteAllText($hostFile,$hostText,$utf8)
+        # Upstream SITL treats one cycle as one microsecond. A nanosecond cycle
+        # counter can represent 312.5 us; micros() and all flight dt stay upstream.
+        $sitlText = $originalSitl
+        foreach ($spec in @(@('clockCyclesToMicros','int32_t clockCycles','clockCycles / 1000'),@('clockCyclesTo10thMicros','int32_t clockCycles','clockCycles / 100'),@('clockCyclesTo100thMicros','int32_t clockCycles','clockCycles / 10'),@('clockMicrosToCycles','uint32_t micros','micros * 1000U'),@('getCycleCounter','void','(uint32_t)(micros64() * 1000ULL)'))) {
+            $anchor = "$($spec[0])($($spec[1]))`n{"
+            if (!$sitlText.Contains($anchor)) { throw "SITL clock anchor changed: $anchor" }
+            $sitlText = $sitlText.Replace($anchor,($anchor+"`n    extern int bfDesktopSynchronizedClock(void);`n    if (bfDesktopSynchronizedClock()) return $($spec[2]);"))
+        }
+        [IO.File]::WriteAllText($sitlFile,$sitlText,$utf8)
+        # Read the rates before upstream calibration, filter and scheduler setup.
+        foreach ($anchor in @('gyroSensor->gyroDev.gyroSampleRateHz = VIRTUAL_GYRO_SAMPLE_RATE_HZ;', 'gyroSensor->gyroDev.accSampleRateHz = VIRTUAL_GYRO_SAMPLE_RATE_HZ;')) {
+            if (!$originalGyroInit.Contains($anchor)) { throw 'Virtual sensor initialization anchors changed.' }
+        }
+        $gyroText = $originalGyroInit.Replace('gyroSensor->gyroDev.gyroSampleRateHz = VIRTUAL_GYRO_SAMPLE_RATE_HZ;', 'extern unsigned bfDesktopGyroRateHz(void); extern unsigned bfDesktopAccelRateHz(void); gyroSensor->gyroDev.gyroSampleRateHz = bfDesktopGyroRateHz();').Replace('gyroSensor->gyroDev.accSampleRateHz = VIRTUAL_GYRO_SAMPLE_RATE_HZ;', 'gyroSensor->gyroDev.accSampleRateHz = bfDesktopAccelRateHz();')
+        if ($gyroText -eq $originalGyroInit) { throw 'Virtual sensor initialization anchors changed.' }
+        [IO.File]::WriteAllText($gyroInitFile,$gyroText,$utf8)
+        # Hardware locks to the sensor interrupt clock, including fractional-us
+        # periods (312.5 us at 3200 Hz). Supply that ideal clock in desktop SIL.
+        # Retain upstream integer-us filter dt and all upstream task bodies.
+        $schedulerText = $originalScheduler.Replace('#include "bf_host.h"', "#include `"bf_host.h`"`nextern unsigned bfDesktopGyroRateHz(void);`nextern int bfDesktopSynchronizedClock(void);`nextern void bfDesktopNoteTask(const void *, uint32_t);")
+        $periodAnchor = 'desiredPeriodCycles = (int32_t)clockMicrosToCycles((uint32_t)getTask(TASK_GYRO)->attribute->desiredPeriodUs);'
+        foreach ($anchor in @($periodAnchor,'#include "bf_host.h"','        bfHostNoteTask();','        // Realtime gyro/filtering/PID tasks get complete priority')) {
+            if (!$originalScheduler.Contains($anchor)) { throw "Desktop timing anchor changed: $anchor" }
+        }
+        $schedulerText = $schedulerText.Replace($periodAnchor, ($periodAnchor+"`n    if (bfDesktopSynchronizedClock()) desiredPeriodCycles = (int32_t)(clockMicrosToCycles(1000000U) / bfDesktopGyroRateHz());"))
+        $schedulerText = $schedulerText.Replace('        bfHostNoteTask();', "        bfHostNoteTask();`n        bfDesktopNoteTask(selectedTask, currentTimeBeforeTaskCallUs);")
+        $schedulerText = $schedulerText.Replace('        // Realtime gyro/filtering/PID tasks get complete priority', "        static bool desktopClockStarted;`n        if (bfDesktopSynchronizedClock() && !desktopClockStarted) { lastTargetCycles = getCycleCounter() - desiredPeriodCycles; desktopClockStarted = true; }`n        // Realtime gyro/filtering/PID tasks get complete priority")
+        [IO.File]::WriteAllText($schedulerFile,$schedulerText,$utf8)
         # Passive taps at the exact Mahony input and quaternion propagation
         # boundaries. No firmware filtering or estimator equations are changed.
         $inputAnchor = '    static float integralFBx = 0.0f,'
@@ -101,6 +137,9 @@ try {
         [IO.File]::WriteAllText($hostFile,$originalHost,$utf8)
         [IO.File]::WriteAllText($makeFile,$originalMake,$utf8)
         [IO.File]::WriteAllText($imuFile,$originalImu,$utf8)
+        [IO.File]::WriteAllText($gyroInitFile,$originalGyroInit,$utf8)
+        [IO.File]::WriteAllText($schedulerFile,$originalScheduler,$utf8)
+        [IO.File]::WriteAllText($sitlFile,$originalSitl,$utf8)
     }
     # Runtime DLLs belong beside the executable; no MATLAB Runtime is needed.
     foreach ($name in @('cygwin1.dll','cyggcc_s-seh-1.dll')) {

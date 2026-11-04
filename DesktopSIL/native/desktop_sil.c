@@ -14,12 +14,15 @@
 
 extern int bfDesktopStep(const double *request, double *response);
 extern double bfDesktopImuTelemetry[12];
+extern double bfDesktopTaskTiming[30];
+extern void bfDesktopResetTiming(void);
 #define PI 3.14159265358979323846
 #define P hover_plant_sil_P
 #define DT (1.0/plant_hz)
 static double duration=10, realtime=0, warmup=5, arm_settle=.3, spoolup=1;
 static double log_hz=1000, mode=16, reference_time=0, seed=23341;
 static double plant_hz=16000;
+static double firmware_hz=4000, firmware_accel_hz=4000, synchronized_clock=0;
 static double reference[12], rc_flight[16], rc_disarmed[16], rc_armed[16];
 static double tau_wing=1.0/22, cdw=1, aomega=.48643917993359775;
 static double linear=0, gyro_hz=3200, accel_hz=1600, rc_hz=100, pid_divider=1;
@@ -33,6 +36,7 @@ static Setting settings[]={
     S("duration",&duration,1), S("realtime",&realtime,1), S("warmup",&warmup,1),
     S("arm_settle",&arm_settle,1), S("spoolup",&spoolup,1), S("log_hz",&log_hz,1),
     S("plant_hz",&plant_hz,1),
+    S("firmware_hz",&firmware_hz,1),S("firmware_accel_hz",&firmware_accel_hz,1),S("synchronized_clock",&synchronized_clock,1),
     S("mode",&mode,1), S("reference_time",&reference_time,1), S("seed",&seed,1),
     S("reference",reference,12), S("initial",P.X0,12),
     S("rc_flight",rc_flight,16),S("rc_disarmed",rc_disarmed,16),S("rc_armed",rc_armed,16),
@@ -78,9 +82,11 @@ static int readSettings(const char *path) {
     }
     fclose(f);
     if(duration<=0 || duration>3600 || P.m<=0 || P.C11<=0 || tau_wing<=0 ||
-       log_hz<1 || log_hz>16000 || (plant_hz!=16000 && plant_hz!=32000 && plant_hz!=64000) || warmup<0 || arm_settle<0 || spoolup<0 ||
+       log_hz<1 || log_hz>16000 || (plant_hz!=3200 && plant_hz!=4000 && plant_hz!=6400 && plant_hz!=8000 && plant_hz!=16000 && plant_hz!=32000 && plant_hz!=64000) || warmup<0 || arm_settle<0 || spoolup<0 ||
        (mode!=0 && mode!=16 && mode!=32) || seed<0 || seed>4294967295.0 ||
        gyro_hz<=0 || accel_hz<=0 || gyro_hz>64000 || accel_hz>64000 || rc_hz<=0 || rc_hz>2000 ||
+       firmware_hz<1000 || firmware_hz>8000 || firmware_accel_hz<100 || firmware_accel_hz>4000 ||
+       (synchronized_clock && (firmware_hz!=gyro_hz || firmware_accel_hz!=accel_hz)) ||
        pid_divider<1 || pid_divider>16 || floor(pid_divider)!=pid_divider ||
        P.gyro.BW<0 || P.accel.BW<0 || P.gyro.noise_density<0 || P.accel.noise_density<0 ||
        P.Constant2_Value[0]<=0 || P.Constant2_Value[1]<=0 || P.Constant2_Value[2]<=0) {
@@ -122,7 +128,7 @@ static int exchange(void) {
     return status==0;
 }
 static int startup(double *epoch) {
-    int warm=(int)ceil(warmup*4000), arm=(int)ceil(arm_settle*4000), spool=(int)ceil(spoolup*4000);
+    int warm=(int)ceil(warmup*firmware_hz), arm=(int)ceil(arm_settle*firmware_hz), spool=(int)ceil(spoolup*firmware_hz);
     int last=warm+arm+spool, sensor=-1, frame=-1;
     double noise=0, phi=P.X0[6], theta=P.X0[7];
     double fixture[3]={P.g*sin(theta),-P.g*sin(phi)*cos(theta),-P.g*cos(phi)*cos(theta)};
@@ -131,7 +137,7 @@ static int startup(double *epoch) {
     memcpy(request+27,P.X0,12*sizeof(double));
     request[46]=phi; request[47]=theta;
     for(int tick=0;tick<=last;tick++) {
-        double t=tick/4000.0; request[4]=t;
+        double t=tick/firmware_hz; request[4]=t;
         int index=(int)floor(t*gyro_hz+1e-8);
         while(sensor<index) { sensor++; noise=sigma*normal01(); }
         for(int i=0;i<3;i++) {
@@ -146,19 +152,20 @@ static int startup(double *epoch) {
         if(!exchange()) return 0;
         if(tick==warm && response[30]!=0) { fprintf(stderr,"Armed during calibration\n"); return 0; }
         if(tick==warm+arm || tick==last) {
-            if(response[30]!=1 || response[35]!=4 || response[33]!=250 || response[34]!=250*pid_divider ||
+            if(response[30]!=1 || response[35]!=4 || response[33]!=(unsigned)(1e6/firmware_hz) || response[34]!=(unsigned)(1e6*pid_divider/firmware_hz) ||
                (mode==16 && !((unsigned)response[32]&1U)) || (mode==32 && ((unsigned)response[32]&3U))) {
                 fprintf(stderr,"Startup check failed: armed=%.0f disable=%.0f modes=%.0f gyro_us=%.0f pid_us=%.0f motors=%.0f\n",response[30],response[31],response[32],response[33],response[34],response[35]); return 0;
             }
         }
         if(tick%400==0 && access("stop",F_OK)==0) return 0;
     }
-    *epoch=(last+1)/4000.0;
+    *epoch=(last+1)/firmware_hz;
     return 1;
 }
 
 static const char *stateNames[]={"x_m","y_m","z_m","u_mps","v_mps","w_mps","roll_rad","pitch_rad","yaw_rad","p_radps","q_radps","r_radps"};
 static const char *diagNames[]={"motor1_pot","motor2_pot","motor3_pot","motor4_pot", "estimate_roll_rad","estimate_pitch_rad","estimate_yaw_rad", "filtered_p_radps","filtered_q_radps","filtered_r_radps", "setpoint_p_radps","setpoint_q_radps","setpoint_r_radps", "roll_P","roll_I","roll_D","roll_F","pitch_P","pitch_I","pitch_D","pitch_F","yaw_P","yaw_I","yaw_D","yaw_F", "armed","arming_disable","mode_flags","gyro_period_us","pid_period_us","motor_count","roll_PID_sum","pitch_PID_sum","yaw_PID_sum","firmware_ticks"};
+static const char *taskNames[]={"gyro","filter","pid","accel","attitude","receiver"};
 static void writeHeader(FILE *f) {
     fprintf(f,"time_s");
     for(int i=0;i<12;i++) fprintf(f,",%s",stateNames[i]);
@@ -168,10 +175,11 @@ static void writeHeader(FILE *f) {
     for(int i=0;i<12;i++) fprintf(f,",reference_%s",stateNames[i]);
     fprintf(f,",ideal_gyro_x_radps,ideal_gyro_y_radps,ideal_gyro_z_radps,ideal_accel_x_mps2,ideal_accel_y_mps2,ideal_accel_z_mps2");
     fprintf(f,",filtered_input_p_radps,filtered_input_q_radps,filtered_input_r_radps,filtered_input_accel_x_mps2,filtered_input_accel_y_mps2,filtered_input_accel_z_mps2,mahony_accel_accepted,mahony_update_dt_s,mahony_update_count,mahony_propagation_p_radps,mahony_propagation_q_radps,mahony_propagation_r_radps");
+    for(int i=0;i<6;i++) fprintf(f,",task_%s_count,task_%s_last_time_s,task_%s_dt_s",taskNames[i],taskNames[i],taskNames[i]);
     fputc('\n',f);
 }
 static void writeRow(FILE *f,double t) {
-    double row[88]; int n=0; row[n++]=t;
+    double row[106]; int n=0; row[n++]=t;
     for(int i=0;i<12;i++) row[n++]=plantOutputValues.true_state[i];
     for(int i=0;i<3;i++) row[n++]=plantOutputValues.gyro_measured[i];
     for(int i=0;i<3;i++) row[n++]=plantOutputValues.accel_measured[i];
@@ -181,6 +189,7 @@ static void writeRow(FILE *f,double t) {
     for(int i=0;i<3;i++) row[n++]=plantOutputValues.gyro_ideal[i];
     for(int i=0;i<3;i++) row[n++]=plantOutputValues.accel_ideal[i];
     for(int i=0;i<12;i++) row[n++]=bfDesktopImuTelemetry[i]*(i>=3 && i<=5 ? -9.80665/256.0 : 1.0);
+    for(int i=0;i<6;i++) { row[n++]=bfDesktopTaskTiming[i]; row[n++]=bfDesktopTaskTiming[6+i]; row[n++]=bfDesktopTaskTiming[12+i]; }
     if(fwrite(row,sizeof(double),(size_t)n,f)!=(size_t)n) { perror("Signal log write"); exit(4); }
 }
 
@@ -201,19 +210,23 @@ int desktopSilRun(void) {
         return 3;
     }
     plantInitialize(linear!=0,linear_a,linear_b);
+    bfDesktopResetTiming();
     FILE *header=fopen("signals.header","w"); if(!header) return 4;
     writeHeader(header); fclose(header);
     FILE *data=fopen("signals.bin","wb"); if(!data) { perror("signals.bin"); return 4; }
     setvbuf(data,NULL,_IOFBF,1024*1024);
     double flightStart=wallTime(), pacingStart=flightStart, t=0;
     int stopped=0, failed=0;
-    uint64_t baseTick=0,ctrlTick=0,gyroTick=0,accelTick=0,logTick=0,progressTick=0;
+    uint64_t integrationSteps=0;
+    double minimumStep=DT, maximumStep=0;
+    uint64_t baseTick=0,ctrlTick=0,gyroTick=0,accelTick=0,logTick=0,progressTick=0,rcTick=0;
     long receiverFrame=-1;
     printf("[DESKTOP] RUNNING\n"); fflush(stdout);
     for(;;) {
-        int ctrlHit=fabs(t-ctrlTick/4000.0)<1e-10;
+        int ctrlHit=fabs(t-ctrlTick/firmware_hz)<1e-10;
         int gyroHit=fabs(t-gyroTick/gyro_hz)<1e-10;
         int accelHit=fabs(t-accelTick/accel_hz)<1e-10;
+        int rcHit=fabs(t-rcTick/rc_hz)<1e-10;
         if(ctrlHit && ctrlTick%40==0) {
             if(access("stop",F_OK)==0) { stopped=1; break; }
             double paused=wallTime();
@@ -222,7 +235,7 @@ int desktopSilRun(void) {
             if(realtime) while(wallTime()-pacingStart<t && access("stop",F_OK)!=0) nap();
         }
         plantOutputs(ctrlHit,gyroHit,accelHit);
-        if(ctrlHit) {
+        if(ctrlHit || (synchronized_clock && (gyroHit || accelHit || rcHit))) {
             request[4]=epoch+t;
             memcpy(request+5,plantOutputValues.gyro_measured,3*sizeof(double));
             memcpy(request+8,plantOutputValues.accel_measured,3*sizeof(double));
@@ -247,17 +260,27 @@ int desktopSilRun(void) {
         if(ctrlHit) ctrlTick++;
         if(gyroHit) gyroTick++;
         if(accelHit) accelTick++;
+        if(rcHit) rcTick++;
         while(baseTick*DT<=t+1e-10) baseTick++;
-        double next=fmin(duration,fmin(baseTick*DT,fmin(ctrlTick/4000.0,fmin(gyroTick/gyro_hz,fmin(accelTick/accel_hz,logTick/log_hz)))));
+        double next=fmin(duration,fmin(baseTick*DT,fmin(ctrlTick/firmware_hz,fmin(gyroTick/gyro_hz,fmin(accelTick/accel_hz,logTick/log_hz)))));
+        if(synchronized_clock) next=fmin(next,rcTick/rc_hz);
         if(next<=t) { fprintf(stderr,"Scheduler failed to advance\n"); failed=1; break; }
-        plantAdvance(next,next-t); t=next;
+        double step=next-t;
+        if(step<minimumStep) minimumStep=step;
+        if(step>maximumStep) maximumStep=step;
+        plantAdvance(next,step); integrationSteps++; t=next;
     }
     fclose(data); if(trace) fclose(trace);
     plantTerminate();
     double elapsed=wallTime()-flightStart;
     FILE *summary=fopen("engine_summary.json","w");
     if(summary) {
-        fprintf(summary,"{\"completed\":%s,\"stopped\":%s,\"simulation_seconds\":%.9g,\"flight_wall_seconds\":%.9g,\"total_wall_seconds\":%.9g,\"speed_ratio\":%.9g,\"plant_hz\":%.9g,\"solver\":\"ode5\",\"firmware_hz\":4000,\"pid_hz\":%.9g,\"gyro_hz\":%.9g,\"accel_hz\":%.9g,\"log_hz_actual\":%.9g,\"trim_pot\":%.12g,\"linear\":%s}\n",(!failed&&!stopped)?"true":"false",stopped?"true":"false",t,elapsed,wallTime()-totalStart,t/fmax(elapsed,1e-9),plant_hz,4000/pid_divider,gyro_hz,accel_hz,log_hz,P.u0,linear?"true":"false");
+        fprintf(summary,"{\"completed\":%s,\"stopped\":%s,\"simulation_seconds\":%.9g,\"flight_wall_seconds\":%.9g,\"total_wall_seconds\":%.9g,\"speed_ratio\":%.9g,\"plant_hz\":%.9g,\"solver\":\"ode5\",\"firmware_hz\":%.9g,\"firmware_accel_hz\":%.9g,\"pid_hz\":%.9g,\"gyro_hz\":%.9g,\"accel_hz\":%.9g,\"log_hz_actual\":%.9g,\"trim_pot\":%.12g,\"linear\":%s,\"task_timing\":{",(!failed&&!stopped)?"true":"false",stopped?"true":"false",t,elapsed,wallTime()-totalStart,t/fmax(elapsed,1e-9),plant_hz,firmware_hz,firmware_accel_hz,firmware_hz/pid_divider,gyro_hz,accel_hz,log_hz,P.u0,linear?"true":"false");
+        for(int i=0;i<6;i++) {
+            double count=bfDesktopTaskTiming[i], span=bfDesktopTaskTiming[6+i]-bfDesktopTaskTiming[18+i];
+            fprintf(summary,"%s\"%s\":{\"count\":%.0f,\"measured_hz\":%.12g,\"last_period_s\":%.12g,\"max_period_s\":%.12g}",i?",":"",taskNames[i],count,span>0?(count-1)/span:0,bfDesktopTaskTiming[12+i],bfDesktopTaskTiming[24+i]);
+        }
+        fprintf(summary,"},\"integration\":{\"steps\":%llu,\"mean_steps_per_second\":%.12g,\"minimum_step_s\":%.12g,\"maximum_step_s\":%.12g}}\n",(unsigned long long)integrationSteps,t>0?integrationSteps/t:0,integrationSteps?minimumStep:0,maximumStep);
         fclose(summary);
     }
     printf("[DESKTOP] %s sim=%.3fs wall=%.3fs speed=%.2fx\n",failed?"FAILED":(stopped?"STOPPED":"COMPLETE"),t,elapsed,t/fmax(elapsed,1e-9)); fflush(stdout);

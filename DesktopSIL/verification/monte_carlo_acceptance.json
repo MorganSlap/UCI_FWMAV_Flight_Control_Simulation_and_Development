@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "parallel_serial_exact_match": true,
+  "full_resolution_metrics": true,
+  "nominal_excluded": true,
+  "pause_stop_resume": true,
+  "failed_trials_recorded": true,
+  "chart_views": 5,
+  "reprocessing": true,
+  "study": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\monte_carlo\\20261103_093418_f8131106",
+  "serial_study": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\monte_carlo\\20261103_093422_283dede2",
+  "resumed_study": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\monte_carlo\\20261103_093429_e6ed94b9",
+  "failure_study": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\monte_carlo\\20261103_093432_529bdd35"
+}

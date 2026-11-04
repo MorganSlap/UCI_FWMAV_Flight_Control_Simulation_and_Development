@@ -92,12 +92,12 @@ def expanded_settings():
             for axis,key in enumerate(("roll_rad","pitch_rad","r_radps") if name=="angle" else ("p_radps","q_radps","r_radps")):
                 assert abs(np.rad2deg(data["reference_"+key][ix])-row[axis+1])<1e-10
         report[name+"_sequence"]={"rows":len(case["schedule"]),"folder":str(folder),"passed":True}
-    case=runner.load_case(runner.ROOT/"presets/noisy_hover.json"); case.update(duration=1,fidelity="low",rc_hz=200)
+    case=runner.load_case(runner.ROOT/"presets/noisy_hover.json"); case.update(duration=1,fidelity="low",rc_hz=200,timing_profile="Custom")
     case["profiles"].update(profile=1,rateprofile=2,battery_profile=1)
     cfg.set_firmware(case,"angle_p_gain",24); cfg.set_firmware(case,"pid_process_denom",4)
     case["gyro"]["sample_rate"]=3000; case["accel"]["sample_rate"]=1000
     folder=runner.execute(case,progress=lambda *args:None); data=storage.load_run(folder)
-    assert np.all(data["pid_period_us"]==1000)
+    assert np.all(data["pid_period_us"]==1333)
     summary=storage.read_json(folder/"engine_summary.json"); assert summary["linear"]
     assert summary["gyro_hz"]==3000 and summary["accel_hz"]==1000
     assert cfg.firmware_value(storage.load_run(folder).settings,"angle_p_gain")=="24"
@@ -147,6 +147,7 @@ def main():
     report["pause_resume_stop"]=pause_stop()
     report["expanded_configuration"]=expanded_settings()
     c=runner.load_case(runner.ROOT/"presets/noisy_hover.json"); c["duration"]=1
+    c['timing_profile']='Legacy 4 kHz'; c['accel']['sample_rate']=1600
     traced=runner.execute(c,progress=lambda *args:None,trace=True)
     report["original_firmware_replay"]=exact_firmware_replay(traced)
     y=np.zeros(10000); y[1234]=100; y[5678]=-70; keep=extrema_indices(y,400)

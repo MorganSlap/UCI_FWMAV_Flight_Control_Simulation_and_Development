@@ -3,56 +3,134 @@
     "completed": true,
     "stopped": false,
     "simulation_seconds": 60,
-    "flight_wall_seconds": 3.6244015,
-    "total_wall_seconds": 3.664323,
-    "speed_ratio": 16.5544573,
+    "flight_wall_seconds": 4.8348925,
+    "total_wall_seconds": 5.0923145,
+    "speed_ratio": 12.4097899,
     "plant_hz": 16000,
     "solver": "ode5",
-    "firmware_hz": 4000,
-    "pid_hz": 4000,
+    "firmware_hz": 3200,
+    "firmware_accel_hz": 800,
+    "pid_hz": 3200,
     "gyro_hz": 3200,
-    "accel_hz": 1600,
-    "log_hz_actual": 16000,
+    "accel_hz": 800,
+    "log_hz_actual": 4000,
     "trim_pot": 1816.10262009,
     "linear": false,
-    "max_roll_pitch_deg": 1.4511642730103518,
-    "final_z_m": 3.771467196803571,
-    "samples": 960001,
-    "archive_bytes": 239873016,
-    "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_202657_c68536"
+    "task_timing": {
+      "gyro": {
+        "count": 192001,
+        "measured_hz": 3200,
+        "last_period_s": 0.000313000000006,
+        "max_period_s": 0.000313000000006
+      },
+      "filter": {
+        "count": 192001,
+        "measured_hz": 3200,
+        "last_period_s": 0.000313000000006,
+        "max_period_s": 0.000313000000006
+      },
+      "pid": {
+        "count": 192001,
+        "measured_hz": 3200,
+        "last_period_s": 0.000313000000006,
+        "max_period_s": 0.000313000000006
+      },
+      "accel": {
+        "count": 48000,
+        "measured_hz": 800,
+        "last_period_s": 0.00125,
+        "max_period_s": 0.00125000000001
+      },
+      "attitude": {
+        "count": 24000,
+        "measured_hz": 400,
+        "last_period_s": 0.0025,
+        "max_period_s": 0.00250000000001
+      },
+      "receiver": {
+        "count": 18003,
+        "measured_hz": 300.033333333,
+        "last_period_s": 0,
+        "max_period_s": 0.01
+      }
+    },
+    "max_roll_pitch_deg": 1.6471969878086326,
+    "final_z_m": 3.4674253479081947,
+    "samples": 240001,
+    "archive_bytes": 81054855,
+    "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261102_093749_a5c0a1"
   },
   "recovery": {
     "completed": true,
     "stopped": false,
     "simulation_seconds": 20,
-    "flight_wall_seconds": 1.1718596,
-    "total_wall_seconds": 1.2197446,
-    "speed_ratio": 17.0668909,
+    "flight_wall_seconds": 1.5841027,
+    "total_wall_seconds": 1.8303043,
+    "speed_ratio": 12.625444,
     "plant_hz": 16000,
     "solver": "ode5",
-    "firmware_hz": 4000,
-    "pid_hz": 4000,
+    "firmware_hz": 3200,
+    "firmware_accel_hz": 800,
+    "pid_hz": 3200,
     "gyro_hz": 3200,
-    "accel_hz": 1600,
-    "log_hz_actual": 16000,
+    "accel_hz": 800,
+    "log_hz_actual": 4000,
     "trim_pot": 1816.10262009,
     "linear": false,
+    "task_timing": {
+      "gyro": {
+        "count": 64001,
+        "measured_hz": 3200,
+        "last_period_s": 0.000313000000002,
+        "max_period_s": 0.000313000000002
+      },
+      "filter": {
+        "count": 64001,
+        "measured_hz": 3200,
+        "last_period_s": 0.000313000000002,
+        "max_period_s": 0.000313000000002
+      },
+      "pid": {
+        "count": 64001,
+        "measured_hz": 3200,
+        "last_period_s": 0.000313000000002,
+        "max_period_s": 0.000313000000002
+      },
+      "accel": {
+        "count": 16000,
+        "measured_hz": 800,
+        "last_period_s": 0.00125,
+        "max_period_s": 0.00125
+      },
+      "attitude": {
+        "count": 8000,
+        "measured_hz": 400,
+        "last_period_s": 0.0025,
+        "max_period_s": 0.0025
+      },
+      "receiver": {
+        "count": 6003,
+        "measured_hz": 300.1,
+        "last_period_s": 0,
+        "max_period_s": 0.01
+      }
+    },
     "initial_roll_pitch_deg": [
       5.0,
       -3.0000000000000004
     ],
     "final_roll_pitch_deg": [
-      1.046603334197508,
-      0.9848231103488644
+      1.2551029178698547,
+      1.1740639062877547
     ]
   },
   "repeatability": {
     "identical_samples": true,
-    "samples": 16001
+    "samples": 4001
   },
   "noise_toggle": {
     "quiet_max_roll_rad": 0.0,
-    "noisy_raw_gyro_std_deg_s": 11.097528266203277
+    "noisy_raw_gyro_std_deg_s": 11.10709297925186
   },
   "runtime_settings": {
     "angle_p_verified_in_native_dump": 25,
@@ -62,47 +140,125 @@
   "pause_resume_stop": {
     "completed": false,
     "stopped": true,
-    "simulation_seconds": 0.64,
-    "flight_wall_seconds": 1.0413777,
-    "total_wall_seconds": 1.0916261,
-    "speed_ratio": 0.614570487,
+    "simulation_seconds": 0.625,
+    "flight_wall_seconds": 1.0356143,
+    "total_wall_seconds": 1.2808292,
+    "speed_ratio": 0.603506537,
     "plant_hz": 16000,
     "solver": "ode5",
-    "firmware_hz": 4000,
-    "pid_hz": 4000,
+    "firmware_hz": 3200,
+    "firmware_accel_hz": 800,
+    "pid_hz": 3200,
     "gyro_hz": 3200,
-    "accel_hz": 1600,
-    "log_hz_actual": 16000,
+    "accel_hz": 800,
+    "log_hz_actual": 4000,
     "trim_pot": 1816.10262009,
-    "linear": false
+    "linear": false,
+    "task_timing": {
+      "gyro": {
+        "count": 2000,
+        "measured_hz": 3200.00256128,
+        "last_period_s": 0.000312,
+        "max_period_s": 0.000313
+      },
+      "filter": {
+        "count": 2000,
+        "measured_hz": 3200.00256128,
+        "last_period_s": 0.000312,
+        "max_period_s": 0.000313
+      },
+      "pid": {
+        "count": 2000,
+        "measured_hz": 3200.00256128,
+        "last_period_s": 0.000312,
+        "max_period_s": 0.000313
+      },
+      "accel": {
+        "count": 500,
+        "measured_hz": 800,
+        "last_period_s": 0.00125,
+        "max_period_s": 0.00125
+      },
+      "attitude": {
+        "count": 250,
+        "measured_hz": 400,
+        "last_period_s": 0.0025,
+        "max_period_s": 0.0025
+      },
+      "receiver": {
+        "count": 189,
+        "measured_hz": 303.225806452,
+        "last_period_s": 0,
+        "max_period_s": 0.01
+      }
+    }
   },
   "expanded_configuration": {
     "angle_sequence": {
       "rows": 5,
-      "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_202723_fd86ea",
+      "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261102_093807_76a119",
       "passed": true
     },
     "rate_sequence": {
       "rows": 7,
-      "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_202725_3f9ff8",
+      "folder": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261102_093808_29255b",
       "passed": true
     },
     "profiles_linear_rates": {
       "completed": true,
       "stopped": false,
       "simulation_seconds": 1,
-      "flight_wall_seconds": 0.0714479,
-      "total_wall_seconds": 0.1117091,
-      "speed_ratio": 13.9962126,
+      "flight_wall_seconds": 0.0896132,
+      "total_wall_seconds": 0.334043,
+      "speed_ratio": 11.1590703,
       "plant_hz": 16000,
       "solver": "ode5",
-      "firmware_hz": 4000,
-      "pid_hz": 1000,
+      "firmware_hz": 3000,
+      "firmware_accel_hz": 1000,
+      "pid_hz": 750,
       "gyro_hz": 3000,
       "accel_hz": 1000,
-      "log_hz_actual": 16000,
+      "log_hz_actual": 4000,
       "trim_pot": 1816.10262009,
       "linear": true,
+      "task_timing": {
+        "gyro": {
+          "count": 3001,
+          "measured_hz": 3000.003,
+          "last_period_s": 0.000334,
+          "max_period_s": 0.000334000000001
+        },
+        "filter": {
+          "count": 750,
+          "measured_hz": 750.000500668,
+          "last_period_s": 0.001333,
+          "max_period_s": 0.001334
+        },
+        "pid": {
+          "count": 751,
+          "measured_hz": 750.000750001,
+          "last_period_s": 0.001334,
+          "max_period_s": 0.001334
+        },
+        "accel": {
+          "count": 1000,
+          "measured_hz": 1000,
+          "last_period_s": 0.001,
+          "max_period_s": 0.001
+        },
+        "attitude": {
+          "count": 500,
+          "measured_hz": 500,
+          "last_period_s": 0.002,
+          "max_period_s": 0.002
+        },
+        "receiver": {
+          "count": 603,
+          "measured_hz": 604.823315236,
+          "last_period_s": 0,
+          "max_period_s": 0.005
+        }
+      },
       "profiles": {
         "profile": 1,
         "rateprofile": 2,
@@ -122,7 +278,7 @@
     "exchanges": 29202,
     "response_words_per_exchange": 40,
     "exactly_equal": true,
-    "wall_seconds": 2.047000000005937
+    "wall_seconds": 2.2969999999913853
   },
   "plot_decimation": {
     "extrema_preserved": true

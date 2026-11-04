@@ -1,0 +1,632 @@
+{
+  "x_m": {
+    "unit": "m",
+    "label": "x m",
+    "group": "Plant / firmware"
+  },
+  "y_m": {
+    "unit": "m",
+    "label": "y m",
+    "group": "Plant / firmware"
+  },
+  "z_m": {
+    "unit": "m",
+    "label": "z m",
+    "group": "Plant / firmware"
+  },
+  "u_mps": {
+    "unit": "m/s",
+    "label": "u mps",
+    "group": "Plant / firmware"
+  },
+  "v_mps": {
+    "unit": "m/s",
+    "label": "v mps",
+    "group": "Plant / firmware"
+  },
+  "w_mps": {
+    "unit": "m/s",
+    "label": "w mps",
+    "group": "Plant / firmware"
+  },
+  "roll_rad": {
+    "unit": "rad",
+    "label": "roll rad",
+    "group": "Plant / firmware"
+  },
+  "pitch_rad": {
+    "unit": "rad",
+    "label": "pitch rad",
+    "group": "Plant / firmware"
+  },
+  "yaw_rad": {
+    "unit": "rad",
+    "label": "yaw rad",
+    "group": "Plant / firmware"
+  },
+  "p_radps": {
+    "unit": "rad/s",
+    "label": "p radps",
+    "group": "Plant / firmware"
+  },
+  "q_radps": {
+    "unit": "rad/s",
+    "label": "q radps",
+    "group": "Plant / firmware"
+  },
+  "r_radps": {
+    "unit": "rad/s",
+    "label": "r radps",
+    "group": "Plant / firmware"
+  },
+  "raw_gyro_x_radps": {
+    "unit": "rad/s",
+    "label": "raw gyro x radps",
+    "group": "Raw / ideal IMU"
+  },
+  "raw_gyro_y_radps": {
+    "unit": "rad/s",
+    "label": "raw gyro y radps",
+    "group": "Raw / ideal IMU"
+  },
+  "raw_gyro_z_radps": {
+    "unit": "rad/s",
+    "label": "raw gyro z radps",
+    "group": "Raw / ideal IMU"
+  },
+  "raw_accel_x_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "raw accel x mps2",
+    "group": "Raw / ideal IMU"
+  },
+  "raw_accel_y_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "raw accel y mps2",
+    "group": "Raw / ideal IMU"
+  },
+  "raw_accel_z_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "raw accel z mps2",
+    "group": "Raw / ideal IMU"
+  },
+  "actuator1_delta_pot": {
+    "unit": "pot",
+    "label": "actuator1 delta pot",
+    "group": "Controls"
+  },
+  "actuator2_delta_pot": {
+    "unit": "pot",
+    "label": "actuator2 delta pot",
+    "group": "Controls"
+  },
+  "actuator3_delta_pot": {
+    "unit": "pot",
+    "label": "actuator3 delta pot",
+    "group": "Controls"
+  },
+  "actuator4_delta_pot": {
+    "unit": "pot",
+    "label": "actuator4 delta pot",
+    "group": "Controls"
+  },
+  "motor1_pot": {
+    "unit": "pot",
+    "label": "motor1 pot",
+    "group": "Controls"
+  },
+  "motor2_pot": {
+    "unit": "pot",
+    "label": "motor2 pot",
+    "group": "Controls"
+  },
+  "motor3_pot": {
+    "unit": "pot",
+    "label": "motor3 pot",
+    "group": "Controls"
+  },
+  "motor4_pot": {
+    "unit": "pot",
+    "label": "motor4 pot",
+    "group": "Controls"
+  },
+  "estimate_roll_rad": {
+    "unit": "rad",
+    "label": "estimate roll rad",
+    "group": "Estimated state"
+  },
+  "estimate_pitch_rad": {
+    "unit": "rad",
+    "label": "estimate pitch rad",
+    "group": "Estimated state"
+  },
+  "estimate_yaw_rad": {
+    "unit": "rad",
+    "label": "estimate yaw rad",
+    "group": "Estimated state"
+  },
+  "setpoint_p_radps": {
+    "unit": "rad/s",
+    "label": "setpoint p radps",
+    "group": "Plant / firmware"
+  },
+  "setpoint_q_radps": {
+    "unit": "rad/s",
+    "label": "setpoint q radps",
+    "group": "Plant / firmware"
+  },
+  "setpoint_r_radps": {
+    "unit": "rad/s",
+    "label": "setpoint r radps",
+    "group": "Plant / firmware"
+  },
+  "roll_P": {
+    "unit": "native PID",
+    "label": "roll P",
+    "group": "Native PID contributions"
+  },
+  "roll_I": {
+    "unit": "native PID",
+    "label": "roll I",
+    "group": "Native PID contributions"
+  },
+  "roll_D": {
+    "unit": "native PID",
+    "label": "roll D",
+    "group": "Native PID contributions"
+  },
+  "roll_F": {
+    "unit": "native PID",
+    "label": "roll F",
+    "group": "Native PID contributions"
+  },
+  "pitch_P": {
+    "unit": "native PID",
+    "label": "pitch P",
+    "group": "Native PID contributions"
+  },
+  "pitch_I": {
+    "unit": "native PID",
+    "label": "pitch I",
+    "group": "Native PID contributions"
+  },
+  "pitch_D": {
+    "unit": "native PID",
+    "label": "pitch D",
+    "group": "Native PID contributions"
+  },
+  "pitch_F": {
+    "unit": "native PID",
+    "label": "pitch F",
+    "group": "Native PID contributions"
+  },
+  "yaw_P": {
+    "unit": "native PID",
+    "label": "yaw P",
+    "group": "Native PID contributions"
+  },
+  "yaw_I": {
+    "unit": "native PID",
+    "label": "yaw I",
+    "group": "Native PID contributions"
+  },
+  "yaw_D": {
+    "unit": "native PID",
+    "label": "yaw D",
+    "group": "Native PID contributions"
+  },
+  "yaw_F": {
+    "unit": "native PID",
+    "label": "yaw F",
+    "group": "Native PID contributions"
+  },
+  "armed": {
+    "unit": "",
+    "label": "armed",
+    "group": "Plant / firmware"
+  },
+  "arming_disable": {
+    "unit": "",
+    "label": "arming disable",
+    "group": "Plant / firmware"
+  },
+  "mode_flags": {
+    "unit": "",
+    "label": "mode flags",
+    "group": "Plant / firmware"
+  },
+  "gyro_period_us": {
+    "unit": "\u00b5s",
+    "label": "gyro period us",
+    "group": "Plant / firmware"
+  },
+  "pid_period_us": {
+    "unit": "\u00b5s",
+    "label": "pid period us",
+    "group": "Plant / firmware"
+  },
+  "motor_count": {
+    "unit": "",
+    "label": "motor count",
+    "group": "Controls"
+  },
+  "roll_PID_sum": {
+    "unit": "native PID",
+    "label": "roll PID sum",
+    "group": "Native PID contributions"
+  },
+  "pitch_PID_sum": {
+    "unit": "native PID",
+    "label": "pitch PID sum",
+    "group": "Native PID contributions"
+  },
+  "yaw_PID_sum": {
+    "unit": "native PID",
+    "label": "yaw PID sum",
+    "group": "Native PID contributions"
+  },
+  "firmware_ticks": {
+    "unit": "",
+    "label": "firmware ticks",
+    "group": "Plant / firmware"
+  },
+  "reference_x_m": {
+    "unit": "m",
+    "label": "reference x m",
+    "group": "Requested commands"
+  },
+  "reference_y_m": {
+    "unit": "m",
+    "label": "reference y m",
+    "group": "Requested commands"
+  },
+  "reference_z_m": {
+    "unit": "m",
+    "label": "reference z m",
+    "group": "Requested commands"
+  },
+  "reference_u_mps": {
+    "unit": "m/s",
+    "label": "reference u mps",
+    "group": "Requested commands"
+  },
+  "reference_v_mps": {
+    "unit": "m/s",
+    "label": "reference v mps",
+    "group": "Requested commands"
+  },
+  "reference_w_mps": {
+    "unit": "m/s",
+    "label": "reference w mps",
+    "group": "Requested commands"
+  },
+  "reference_roll_rad": {
+    "unit": "rad",
+    "label": "reference roll rad",
+    "group": "Requested commands"
+  },
+  "reference_pitch_rad": {
+    "unit": "rad",
+    "label": "reference pitch rad",
+    "group": "Requested commands"
+  },
+  "reference_yaw_rad": {
+    "unit": "rad",
+    "label": "reference yaw rad",
+    "group": "Requested commands"
+  },
+  "reference_p_radps": {
+    "unit": "rad/s",
+    "label": "reference p radps",
+    "group": "Requested commands"
+  },
+  "reference_q_radps": {
+    "unit": "rad/s",
+    "label": "reference q radps",
+    "group": "Requested commands"
+  },
+  "reference_r_radps": {
+    "unit": "rad/s",
+    "label": "reference r radps",
+    "group": "Requested commands"
+  },
+  "ideal_gyro_x_radps": {
+    "unit": "rad/s",
+    "label": "ideal gyro x radps",
+    "group": "Raw / ideal IMU"
+  },
+  "ideal_gyro_y_radps": {
+    "unit": "rad/s",
+    "label": "ideal gyro y radps",
+    "group": "Raw / ideal IMU"
+  },
+  "ideal_gyro_z_radps": {
+    "unit": "rad/s",
+    "label": "ideal gyro z radps",
+    "group": "Raw / ideal IMU"
+  },
+  "ideal_accel_x_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "ideal accel x mps2",
+    "group": "Raw / ideal IMU"
+  },
+  "ideal_accel_y_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "ideal accel y mps2",
+    "group": "Raw / ideal IMU"
+  },
+  "ideal_accel_z_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "ideal accel z mps2",
+    "group": "Raw / ideal IMU"
+  },
+  "filtered_input_p_radps": {
+    "unit": "rad/s",
+    "label": "Filtered p into Mahony",
+    "group": "Filtered IMU (Mahony input)"
+  },
+  "filtered_input_q_radps": {
+    "unit": "rad/s",
+    "label": "Filtered q into Mahony",
+    "group": "Filtered IMU (Mahony input)"
+  },
+  "filtered_input_r_radps": {
+    "unit": "rad/s",
+    "label": "Filtered r into Mahony",
+    "group": "Filtered IMU (Mahony input)"
+  },
+  "filtered_input_accel_x_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "Filtered accel x into Mahony",
+    "group": "Filtered IMU (Mahony input)"
+  },
+  "filtered_input_accel_y_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "Filtered accel y into Mahony",
+    "group": "Filtered IMU (Mahony input)"
+  },
+  "filtered_input_accel_z_mps2": {
+    "unit": "m/s\u00b2",
+    "label": "Filtered accel z into Mahony",
+    "group": "Filtered IMU (Mahony input)"
+  },
+  "mahony_accel_accepted": {
+    "unit": "",
+    "label": "mahony accel accepted",
+    "group": "Mahony internals (diagnostic)"
+  },
+  "mahony_update_dt_s": {
+    "unit": "",
+    "label": "mahony update dt s",
+    "group": "Mahony internals (diagnostic)"
+  },
+  "mahony_update_count": {
+    "unit": "",
+    "label": "mahony update count",
+    "group": "Mahony internals (diagnostic)"
+  },
+  "mahony_propagation_p_radps": {
+    "unit": "rad/s",
+    "label": "mahony propagation p radps",
+    "group": "Mahony internals (diagnostic)"
+  },
+  "mahony_propagation_q_radps": {
+    "unit": "rad/s",
+    "label": "mahony propagation q radps",
+    "group": "Mahony internals (diagnostic)"
+  },
+  "mahony_propagation_r_radps": {
+    "unit": "rad/s",
+    "label": "mahony propagation r radps",
+    "group": "Mahony internals (diagnostic)"
+  },
+  "task_gyro_count": {
+    "unit": "",
+    "label": "task gyro count",
+    "group": "Firmware task timing"
+  },
+  "task_gyro_last_time_s": {
+    "unit": "s",
+    "label": "task gyro last time s",
+    "group": "Firmware task timing"
+  },
+  "task_gyro_dt_s": {
+    "unit": "s",
+    "label": "task gyro dt s",
+    "group": "Firmware task timing"
+  },
+  "task_filter_count": {
+    "unit": "",
+    "label": "task filter count",
+    "group": "Firmware task timing"
+  },
+  "task_filter_last_time_s": {
+    "unit": "s",
+    "label": "task filter last time s",
+    "group": "Firmware task timing"
+  },
+  "task_filter_dt_s": {
+    "unit": "s",
+    "label": "task filter dt s",
+    "group": "Firmware task timing"
+  },
+  "task_pid_count": {
+    "unit": "",
+    "label": "task pid count",
+    "group": "Firmware task timing"
+  },
+  "task_pid_last_time_s": {
+    "unit": "s",
+    "label": "task pid last time s",
+    "group": "Firmware task timing"
+  },
+  "task_pid_dt_s": {
+    "unit": "s",
+    "label": "task pid dt s",
+    "group": "Firmware task timing"
+  },
+  "task_accel_count": {
+    "unit": "",
+    "label": "task accel count",
+    "group": "Firmware task timing"
+  },
+  "task_accel_last_time_s": {
+    "unit": "s",
+    "label": "task accel last time s",
+    "group": "Firmware task timing"
+  },
+  "task_accel_dt_s": {
+    "unit": "s",
+    "label": "task accel dt s",
+    "group": "Firmware task timing"
+  },
+  "task_attitude_count": {
+    "unit": "",
+    "label": "task attitude count",
+    "group": "Firmware task timing"
+  },
+  "task_attitude_last_time_s": {
+    "unit": "s",
+    "label": "task attitude last time s",
+    "group": "Firmware task timing"
+  },
+  "task_attitude_dt_s": {
+    "unit": "s",
+    "label": "task attitude dt s",
+    "group": "Firmware task timing"
+  },
+  "task_receiver_count": {
+    "unit": "",
+    "label": "task receiver count",
+    "group": "Firmware task timing"
+  },
+  "task_receiver_last_time_s": {
+    "unit": "s",
+    "label": "task receiver last time s",
+    "group": "Firmware task timing"
+  },
+  "task_receiver_dt_s": {
+    "unit": "s",
+    "label": "task receiver dt s",
+    "group": "Firmware task timing"
+  },
+  "estimate_p_radps": {
+    "unit": "rad/s",
+    "label": "Estimated body rate p \u2014 firmware processed gyro",
+    "group": "Estimated state"
+  },
+  "estimate_q_radps": {
+    "unit": "rad/s",
+    "label": "Estimated body rate q \u2014 firmware processed gyro",
+    "group": "Estimated state"
+  },
+  "estimate_r_radps": {
+    "unit": "rad/s",
+    "label": "Estimated body rate r \u2014 firmware processed gyro",
+    "group": "Estimated state"
+  },
+  "altitude_m": {
+    "unit": "m",
+    "label": "altitude_m",
+    "group": "Derived motion"
+  },
+  "altitude_rate_mps": {
+    "unit": "m/s",
+    "label": "altitude_rate_mps",
+    "group": "Derived motion"
+  },
+  "inertial_vx_mps": {
+    "unit": "m/s",
+    "label": "inertial_vx_mps",
+    "group": "Derived motion"
+  },
+  "inertial_vy_mps": {
+    "unit": "m/s",
+    "label": "inertial_vy_mps",
+    "group": "Derived motion"
+  },
+  "inertial_vz_mps": {
+    "unit": "m/s",
+    "label": "inertial_vz_mps",
+    "group": "Derived motion"
+  },
+  "error_roll_rad": {
+    "unit": "rad",
+    "label": "True \u2212 Estimated roll",
+    "group": "Estimation errors (True \u2212 Estimated)"
+  },
+  "error_pitch_rad": {
+    "unit": "rad",
+    "label": "True \u2212 Estimated pitch",
+    "group": "Estimation errors (True \u2212 Estimated)"
+  },
+  "error_yaw_rad": {
+    "unit": "rad",
+    "label": "True \u2212 Estimated yaw",
+    "group": "Estimation errors (True \u2212 Estimated)"
+  },
+  "error_p_radps": {
+    "unit": "rad/s",
+    "label": "True \u2212 Estimated p",
+    "group": "Estimation errors (True \u2212 Estimated)"
+  },
+  "error_q_radps": {
+    "unit": "rad/s",
+    "label": "True \u2212 Estimated q",
+    "group": "Estimation errors (True \u2212 Estimated)"
+  },
+  "error_r_radps": {
+    "unit": "rad/s",
+    "label": "True \u2212 Estimated r",
+    "group": "Estimation errors (True \u2212 Estimated)"
+  },
+  "gyro_error_x_radps": {
+    "unit": "rad/s",
+    "label": "gyro_error_x_radps",
+    "group": "Sensor errors (Raw \u2212 Ideal)"
+  },
+  "raw_accel_x_g": {
+    "unit": "g",
+    "label": "raw_accel_x_g",
+    "group": "Raw / ideal IMU"
+  },
+  "gyro_error_y_radps": {
+    "unit": "rad/s",
+    "label": "gyro_error_y_radps",
+    "group": "Sensor errors (Raw \u2212 Ideal)"
+  },
+  "raw_accel_y_g": {
+    "unit": "g",
+    "label": "raw_accel_y_g",
+    "group": "Raw / ideal IMU"
+  },
+  "gyro_error_z_radps": {
+    "unit": "rad/s",
+    "label": "gyro_error_z_radps",
+    "group": "Sensor errors (Raw \u2212 Ideal)"
+  },
+  "raw_accel_z_g": {
+    "unit": "g",
+    "label": "raw_accel_z_g",
+    "group": "Raw / ideal IMU"
+  },
+  "control_delta1_pot": {
+    "unit": "pot",
+    "label": "control_delta1_pot",
+    "group": "Controls"
+  },
+  "control_delta2_pot": {
+    "unit": "pot",
+    "label": "control_delta2_pot",
+    "group": "Controls"
+  },
+  "control_delta3_pot": {
+    "unit": "pot",
+    "label": "control_delta3_pot",
+    "group": "Controls"
+  },
+  "control_delta4_pot": {
+    "unit": "pot",
+    "label": "control_delta4_pot",
+    "group": "Controls"
+  }
+}

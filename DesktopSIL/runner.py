@@ -44,7 +44,15 @@ def validate(case):
     for key in ("warmup", "arm_settle", "spoolup"): number(case[key], key, 0, 60)
     number(case["log_hz"],"Logging rate",1,16000)
     number(case.get("rc_hz",100),"Receiver rate",1,2000)
-    if case.get("plant_hz",16000) not in (16000,32000,64000): raise ValueError("ODE5 integration rate must be 16000, 32000 or 64000 Hz.")
+    if case.get("plant_hz",16000) not in config_api.INTEGRATION_RATES:
+        raise ValueError("ODE5 base integration rate must be one of: "+", ".join(map(str,config_api.INTEGRATION_RATES))+" Hz.")
+    profile=case.get("timing_profile","Legacy 4 kHz")
+    if profile not in config_api.TIMING_PROFILES: raise ValueError("Choose a valid firmware timing profile.")
+    if profile=="BMI270" and (case["gyro"]["sample_rate"]!=3200 or case["accel"]["sample_rate"]!=800):
+        raise ValueError("BMI270 uses 3200 Hz gyro and 800 Hz accelerometer. Choose Custom to experiment with other rates.")
+    if profile=="Custom":
+        if case["gyro"]["sample_rate"] not in (1000,2000,3000,3200,4000,8000): raise ValueError("Custom gyro rates: 1000, 2000, 3000, 3200, 4000 or 8000 Hz.")
+        if case["accel"]["sample_rate"] not in (100,200,400,800,1000,1600,2000,4000): raise ValueError("Choose a supported custom accelerometer rate.")
     for key in ("initial", "reference"):
         if len(case[key]) != 12: raise ValueError(f"{key} must have 12 values.")
         for x in case[key]: number(x, key)
@@ -74,6 +82,8 @@ def validate(case):
         if int(case[key]) != case[key]: raise ValueError(f"{key} must be an integer.")
     divider=float(fw_value(case,"pid_process_denom"))
     if divider!=int(divider) or not 1<=divider<=16: raise ValueError("PID divider must be an integer from 1 to 16.")
+    divider=float(fw_value(case,"imu_process_denom"))
+    if divider!=int(divider) or not 1<=divider<=4: raise ValueError("Attitude estimator divider must be an integer from 1 to 4.")
     if fw_value(case, "motor_pwm_protocol") != "PWM":
         raise ValueError("The plant adapter currently requires motor_pwm_protocol = PWM.")
     if case.get("fidelity","high") not in ("high","low"): raise ValueError("Choose high or low fidelity.")
@@ -117,6 +127,8 @@ def prepare(case, folder=None):
     (folder/"derived.json").write_text(json.dumps(p,indent=2)+"\n",encoding="utf-8")
     config = {k: case[k] for k in ("duration", "realtime", "warmup", "arm_settle", "spoolup", "log_hz", "reference_time", "seed", "noise", "plant_hz")}
     config["mode"] = {"angle":16,"rate":32,"receiver":0}[case["command_mode"]]
+    timing=config_api.timing(case)
+    config.update(firmware_hz=timing["gyro_hz"],firmware_accel_hz=timing["accel_hz"],synchronized_clock=int(timing["synchronized"]))
     config.update(linear=int(case["fidelity"]=="low"),gyro_hz=case["gyro"]["sample_rate"],accel_hz=case["accel"]["sample_rate"],
                   rc_hz=case["rc_hz"],pid_divider=int(fw_value(case,"pid_process_denom")),motor_order=case["motor_order"])
     for key in ("initial", "reference"):
@@ -142,7 +154,8 @@ def prepare(case, folder=None):
                 "model": "hover_linear_sil" if case["fidelity"]=="low" else "hover_plant_sil", "source_model": "lin_hover_sim", "solver": "ode5", "maximum_step_s": 1/case["plant_hz"],
                 "rate_estimate_source": "gyro.gyroADCf: processed rate feedback; Mahony has no separate angular-rate state",
                 "filtered_imu_source": "exact gx/gy/gz and ax/ay/az arguments to imuMahonyAHRSupdate, held between estimator updates",
-                "fixture_noise": "Box-Muller with deterministic LCG; free-flight noise is generated Simulink code"}
+                "fixture_noise": "Box-Muller with deterministic LCG; free-flight noise is generated Simulink code",
+                "firmware_timing":timing,"timing_scope":"Ideal sensor clock and native task scheduling; CPU execution time, bus latency and hardware jitter are not modeled"}
     (folder / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     return folder
 
@@ -150,6 +163,11 @@ def environment(folder, trace=False):
     env = os.environ.copy()
     env["PATH"] = str(ROOT.parent / "Betaflight/toolchain/cygwin/bin") + os.pathsep + env.get("PATH", "")
     env["BF_DESKTOP_CASE"] = "case.txt"
+    settings=config_api.upgrade(json.loads((Path(folder)/"settings.json").read_text())) if (Path(folder)/"settings.json").exists() else None
+    timing=config_api.timing(settings) if settings else {"gyro_hz":4000,"accel_hz":4000,"synchronized":False}
+    env["BF_DESKTOP_GYRO_HZ"]=str(int(timing["gyro_hz"]))
+    env["BF_DESKTOP_ACCEL_HZ"]=str(int(timing["accel_hz"]))
+    env["BF_DESKTOP_SYNC"]="1" if timing["synchronized"] else "0"
     if trace: env["BF_DESKTOP_TRACE"] = "1"
     else: env.pop("BF_DESKTOP_TRACE", None)
     return env

@@ -3,20 +3,26 @@
 This application runs C generated from the existing Simulink actuator, dynamics,
 and sensor blocks together with the actual pinned Betaflight SITL firmware.
 The desktop interface uses Python and Tk. Neither MATLAB nor a web service is
-called during a native simulation. Work is isolated on `codex/desktop-sil`.
+called during a native simulation. Development continues on `feature/SITL_sim_Codex`
+alongside the existing MATLAB and Simulink workflows.
 
 The original `lin_hover_sim.slx`, `lin_hover.m`, MATLAB workbench, and existing
 Betaflight host executable are unchanged by this desktop implementation.
 
 The illustrated [PowerPoint walkthrough](docs/Desktop_SIL_Walkthrough.pptx)
 covers opening the app, configuring runs, plotting, signal definitions, C
-generation, verification, plant updates and future packaging.
+generation, verification, plant updates and future packaging. The
+[firmware timing guide](docs/Firmware_Timing.md) describes the November 2 timing
+update and supersedes the older timing values in that presentation.
 
 ## Open and run
 
 Double-click **Open Desktop SIL.cmd** in this directory. The environment and
-native executable are already built on this computer. Alternatively, run
-`powershell -ExecutionPolicy Bypass -File DesktopSIL/launch.ps1` from the repository.
+native executable are already built on this computer. The launcher starts Python
+directly and does not require PowerShell script execution permission. From a
+PowerShell terminal, run `& '.\DesktopSIL\Open Desktop SIL.cmd'`.
+Startup failures show an error dialog and write details to
+`build/desktop-launch.log`.
 
 1. On **Settings → Run setup**, choose Noisy trimmed hover, Noisy roll recovery,
    Angle pulses, or Rate doublets. Each example supplies a complete configuration.
@@ -55,9 +61,16 @@ main throttle field. The adapter currently requires four motor outputs and PWM
 motor protocol, as the MATLAB adapter does. A catalog setting for hardware that
 is not simulated does not create that hardware in the plant.
 
-**Firmware interface** sets receiver frequency, startup times, motor order and
-PID/mixer divider (1–16). The firmware gyro scheduler remains 4 kHz; the divider
-sets the PID/mixer frequency. Angle/rate schedules use held commands. Constant
+**Firmware timing / startup** selects the timing profile, PID/mixer divider
+(1–16), attitude-estimator divider (1–4), receiver frame rate, startup times and
+motor order. New examples use **BMI270**: 3200 Hz gyro, 800 Hz accelerometer,
+3200 Hz PID/mixer (divider 1), and 400 Hz ANGLE attitude estimation (divider 2).
+RATE / ACRO attitude estimation uses 100 Hz in this pinned firmware.
+The summary also appears on Run setup. Custom timing changes simulated sensor
+sampling and the firmware's rates together, before calibration/filter setup.
+Older saved cases load as Legacy 4 kHz and retain their previous timing.
+See the [timing guide](docs/Firmware_Timing.md) for why and when to change rates.
+Angle/rate schedules use held commands. Constant
 references apply before the first scheduled row. Raw receiver mode uses pulse
 inputs directly and requires an empty angle/rate schedule.
 
@@ -69,10 +82,20 @@ Derived values shows trim, drag coefficients, areas and the linear A/B matrices.
 Save/Load settings uses JSON. Existing MATLAB workbench settings files can be
 imported. **Use this run's settings** restores the saved configuration associated
 with a selected archive. Script defaults resets to values exported from the
-original initialization workflow; the supplied noisy examples are the preferred
-first cases. Firmware CLI/JSON can be imported/exported independently.
+original initialization workflow with the new BMI270 timing profile; the supplied
+noisy examples are the preferred first cases. Importing an existing MATLAB
+settings file preserves Legacy timing. Firmware CLI/JSON can be imported/exported independently.
 
 ## Plots and stored signals
+
+The **Monte Carlo** tab adds reproducible random / Latin-hypercube studies with
+parameter distributions, baseline-relative variations, coupled percentile groups,
+noise-seed policies, and 1–4 isolated workers. Studies support pause/stop/resume,
+trial-level access to ordinary plots, response percentile envelopes, metric
+distributions, parameter sensitivity, pass/fail limits, exports and reprocessing.
+See the [Monte Carlo guide](docs/Monte_Carlo.md) for workflow and metric definitions.
+Study archives are grouped under `runs/monte_carlo/` (or the selected results
+library), while ordinary single-run archives keep their existing layout.
 
 **Default plots** has a selector for 15 views: truth attitude/rates, position and
 altitude, body velocity, estimated attitude/rates, estimation errors, motors,
@@ -92,8 +115,9 @@ All plot windows support mouse-wheel time zoom, drag pan, full-duration reset,
 undocking and PNG/PDF export. Undocked windows keep an independent snapshot.
 Rendering preserves extrema while limiting points drawn; saved data is not
 decimated by the renderer. CSV/MAT exports retain every logged sample at the
-selected logging rate. Logging below the base rate is downsampling without an
-anti-alias filter; use 16000 Hz for the full default base grid.
+selected logging rate. New cases default to 4000 Hz logging while plant
+integration remains at 16000 Hz. Logging below the base rate is downsampling
+without an anti-alias filter; use 16000 Hz for the full default base grid.
 
 **Flight analysis** uses the selected run's saved settings, not unsaved inputs.
 Choose Roll/Pitch/Yaw. Seven explained panels cover tracking, feedback,
@@ -141,13 +165,22 @@ injected into the estimator as its measurement. Firmware attitude telemetry is
 discrete/quantized; smooth plant truth and stepped estimates are distinct signals.
 
 The generated ODE5 (fifth-order Dormand–Prince) solver advances with a default
-maximum step of 1/16000 s. Run setup permits 16000, 32000 or 64000 Hz integration
+maximum step of 1/16000 s. Run setup permits 3200, 4000, 6400, 8000, 16000,
+32000 or 64000 Hz base integration
 without changing the sensor/controller rates. This is an event-aligned fixed-step
-method, not adaptive error-controlled ODE45. Default
-physical sensors sample at 3200 Hz (gyro) and 1600 Hz (accelerometer); their
-outputs are delivered at 4000 Hz. Native PID/mixer runs at 4000/divider Hz.
-Receiver frames default to 100 Hz. The adapter lands on independent sensor,
-controller and logging events when runtime rates are changed.
+method, not adaptive error-controlled ODE45. Default physical sensors and firmware
+sample at 3200 Hz (gyro) and 800 Hz (accelerometer). Native PID/mixer runs at
+3200/divider Hz. Receiver frames default to 100 Hz. The adapter lands on independent
+sensor, controller, receiver and logging events when runtime rates are changed.
+The base grid is a maximum-step constraint, not an exact count of solver steps.
+For BMI270 and 4000 Hz logging, the 3200 and 4000 Hz base choices both produce
+6400 steps per simulated second. Setting both base integration and logging to
+3200 Hz produces a uniform 3200 Hz grid with the default receiver timing.
+Run details records measured step counts and minimum/maximum step lengths.
+See [lower-rate guidance](docs/Firmware_Timing.md#lower-ode5-integration-rates).
+The desktop clock represents fractional-microsecond gyro periods, retaining
+the upstream integer-microsecond algorithm dt fields. Task bodies run with zero
+modeled CPU duration; hardware execution time, bus delays and jitter are not reproduced.
 
 Noise mask power is density² × bandwidth, with **no division by sample rate**,
 matching the requested MATLAB configuration. Simulink's band-limited white-noise
@@ -195,6 +228,7 @@ Paths below are relative to the repository root.
 | `DesktopSIL/runner.py` | Per-run configuration, native process and progress management |
 | `DesktopSIL/storage.py`, `plots.py`, `analysis.py` | HDF5/MAT/CSV, interactive plots and flight metrics |
 | `DesktopSIL/native/desktop_sil.c` | Firmware/plant loop, startup, event timing and logging |
+| `DesktopSIL/native/firmware_timing.inc` | Desktop-only sensor-rate initialization and passive task timing counters |
 | `DesktopSIL/native/plant_adapter.c` | Generated model selection, parameters and output/update calls |
 | `DesktopSIL/matlab/buildPlantCode.m` | Reproducible model extraction and C generation |
 | `DesktopSIL/model/hover_plant_sil.slx`, `hover_linear_sil.slx` | Separate models used for generation and verification |
@@ -231,6 +265,7 @@ Then in PowerShell:
 .\DesktopSIL\build.ps1
 .\DesktopSIL\setup-python.ps1  # only needed when setting up the Python environment
 & .\DesktopSIL\build\venv\Scripts\python.exe DesktopSIL/tests/verify_native.py
+& .\DesktopSIL\build\venv\Scripts\python.exe DesktopSIL/tests/verify_timing.py
 & .\DesktopSIL\build\venv\Scripts\python.exe DesktopSIL/tests/verify_ui.py
 & .\DesktopSIL\build\venv\Scripts\python.exe DesktopSIL/tests/prepare_plant_probes.py
 ```
@@ -243,6 +278,13 @@ ignored by Git; a fresh checkout must rebuild/install them. For a different
 MATLAB installation, pass `-MatlabRoot` to `build.ps1`.
 
 ## Archive contents and verification
+
+The November 2 BMI270 timing update passed measured-rate checks, a 60-second
+noisy hover, a 20-second noisy recovery, seeded repeatability, Legacy original-host
+replay, and repeated GUI/plot/export tests. See [Firmware timing](docs/Firmware_Timing.md)
+and `verification/timing_acceptance.json` for current timing evidence. The original
+generated-plant numerical validation described below remains applicable; the
+plant equations and generated C were not changed by this update.
 
 A run folder contains `settings.json`, `derived.json`, `configuration.cli`,
 `configuration.log`, `engine.log`, `engine_summary.json`, `metadata.json`, the

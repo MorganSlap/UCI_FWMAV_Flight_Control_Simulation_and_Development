@@ -1,6 +1,7 @@
 # Desktop software-in-the-loop build
 
-Branch: codex/desktop-sil. Preserve lin_hover_sim.slx and the MATLAB workbench.
+Development branch: feature/SITL_sim_Codex. Desktop work originated on
+codex/desktop-sil and was merged back. Preserve lin_hover_sim.slx and the MATLAB workbench.
 
 1. Copy the existing actuator, dynamics and sensor blocks into a dedicated
    plant with motor-delta input and true-state/raw-IMU outputs. Generate C using

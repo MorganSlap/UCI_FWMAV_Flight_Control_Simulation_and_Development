@@ -20,8 +20,22 @@ class ParityFeatures:
         self.load_generation=0; self._populate_busy=False
         self.field(self.run_box,11,"Dynamics fidelity","fidelity",choices=("high","low"))
         self.check(self.run_box,12,"Show default plots after loading runs","default_plots")
-        self.field(self.run_box,13,"Run notes","notes")
-        self.field(self.run_box,14,"ODE5 integration rate (Hz)","plant_hz",choices=("16000","32000","64000"))
+        self.field(self.run_box,13,"ODE5 base integration rate (Hz)","plant_hz",choices=tuple(map(str,cfg.INTEGRATION_RATES)))
+        ttk.Label(self.run_box,text=("3200 / 6400 Hz align with the BMI270 gyro; 4000 / 8000 Hz suit 4 kHz timing.\n"
+            "Sensor, receiver and logging events add shorter steps. For 3200 Hz steps with BMI270, also use 3200 Hz logging.\n"
+            "16000 Hz remains the default. Compare lower rates against it when changing plant dynamics or gains."),
+            style="Muted.TLabel",wraplength=850).grid(row=14,column=0,columnspan=2,sticky="w",pady=(0,8))
+        ttk.Label(self.run_box,text="Run notes").grid(row=15,column=0,sticky="nw",padx=(0,18),pady=8)
+        notes_frame=ttk.Frame(self.run_box)
+        notes_frame.grid(row=15,column=1,sticky="ew",pady=8)
+        self.run_box.columnconfigure(1,weight=1)
+        self.notes_text=tk.Text(notes_frame,height=6,width=65,wrap="word",undo=True,
+                                bg="#121d2b",fg="#e2e9f2",insertbackground="white",font=("Segoe UI",10),padx=8,pady=6)
+        notes_scroll=ttk.Scrollbar(notes_frame,orient="vertical",command=self.notes_text.yview)
+        self.notes_text.configure(yscrollcommand=notes_scroll.set)
+        notes_scroll.pack(side="right",fill="y")
+        self.notes_text.pack(side="left",fill="both",expand=True)
+        self.field_widgets["notes"]=(self.notes_text,"Run notes")
         casebar=self.run_page.winfo_children()[0]
         ttk.Button(casebar,text="Angle pulses",command=lambda:self.catalog_preset("angle")).pack(side="left",padx=6)
         ttk.Button(casebar,text="Rate doublets",command=lambda:self.catalog_preset("rate")).pack(side="left",padx=6)
@@ -93,14 +107,14 @@ class ParityFeatures:
         page=self.clear_page("Gyro / accelerometer")
         for sensor,title,units in (("gyro","GYROSCOPE","deg/s"),("accel","ACCELEROMETER","g")):
             box=self.section(page,title)
-            fields=[("sample_rate","Sensor sample rate (Hz)"),("range","Sensor range (deg/s)" if sensor=="gyro" else "Sensor range (g)"),("resolution_bits","Resolution metadata (bits)"),("density",f"Noise density ({units}/√Hz)"),("bandwidth","Noise bandwidth (Hz)"),("bias",f"Bias X, Y, Z ({units})"),("vibration",f"24 Hz wing vibration ({units})")]
+            fields=[("range","Sensor range (deg/s)" if sensor=="gyro" else "Sensor range (g)"),("resolution_bits","Resolution metadata (bits)"),("density",f"Noise density ({units}/√Hz)"),("bandwidth","Noise bandwidth (Hz)"),("bias",f"Bias X, Y, Z ({units})"),("vibration",f"24 Hz wing vibration ({units})")]
             for i,(key,label) in enumerate(fields): self.field(box,i,label,sensor+"."+key)
             names=("simplified_gyro_filter","gyro_lpf1_type","gyro_lpf1_static_hz","gyro_lpf1_dyn_min_hz","gyro_lpf1_dyn_max_hz","gyro_lpf2_static_hz","gyro_calib_noise_limit") if sensor=="gyro" else ("acc_lpf_hz",)
             for row,name in enumerate(names,len(fields)): self.firmware_field(box,row,name)
         box=self.section(page,"Attitude estimator — native Mahony gains")
         self.field(box,0,"Physical proportional gain Kp","estimator_kp")
         self.field(box,1,"Physical integral gain Ki","estimator_ki")
-        ttk.Label(page,text="Kp and Ki are multiplied by 10000 for the native firmware. Resolution fields are retained from MATLAB;\nvirtual firmware ADC quantization is fixed by the SITL drivers. White-noise power is density² × bandwidth, without dividing by sample rate.",style="Muted.TLabel").pack(anchor="w",pady=10)
+        ttk.Label(page,text="Sample rates are on Firmware timing / startup. Kp and Ki are multiplied by 10000 for the native firmware.\nResolution fields are retained from MATLAB; virtual firmware ADC quantization is fixed by the SITL drivers.\nWhite-noise power is density² × bandwidth, without dividing by sample rate.",style="Muted.TLabel").pack(anchor="w",pady=10)
 
     def full_plant(self):
         page=self.clear_page("Physical plant")
@@ -126,10 +140,56 @@ class ParityFeatures:
         for i,(index,label) in enumerate(((0,"X (m)"),(1,"Y (m)"),(2,"Z down (m)"),(3,"U (m/s)"),(4,"V (m/s)"),(5,"W (m/s)"),(8,"Yaw heading (deg)"))): self.field(extra,i,label,f"reference.{index}")
 
     def interface_page(self):
-        page=self.setting_page("Firmware interface"); box=self.section(page,"Startup and receiver scheduling")
-        for row,(key,label) in enumerate((("rc_hz","Receiver update rate (Hz)"),("warmup","Calibration warmup (s)"),("arm_settle","Arming settle time (s)"),("spoolup","Throttle settling before release (s)"),("motor_order","Plant motor order (1–4)"))): self.field(box,row,label,key)
-        self.firmware_field(box,5,"pid_process_denom","PID / mixer divider (1–16; gyro remains 4 kHz)")
-        ttk.Label(page,text="Command mode, fixed throttle and known-bias calibration are on Run setup. Native sensor filtering and calibration\nrun inside the original firmware. Every run validates arming, requested mode, motor count and loop periods.",style="Muted.TLabel").pack(anchor="w",pady=10)
+        page=self.setting_page("Firmware timing / startup")
+        box=self.section(page,"Sensor clock and flight-control scheduling")
+        self.field(box,0,"Timing profile","timing_profile",choices=cfg.TIMING_PROFILES)
+        self.field_widgets["timing_profile"][0].bind("<<ComboboxSelected>>",self.select_timing_profile)
+        self.field(box,1,"Gyro sample / firmware rate (Hz)","gyro.sample_rate",choices=(1000,2000,3000,3200,4000,8000))
+        self.field(box,2,"Accelerometer sample / firmware rate (Hz)","accel.sample_rate",choices=(100,200,400,800,1000,1600,2000,4000))
+        self.field(box,3,"PID / mixer divider","pid_process_denom",choices=tuple(range(1,17)),firmware=True)
+        self.field(box,4,"Attitude-estimator divider (ANGLE)","imu_process_denom",choices=(1,2,3,4),firmware=True)
+        self.field(box,5,"Receiver frame rate (Hz)","rc_hz")
+        self.timing_summary=tk.StringVar()
+        ttk.Label(box,textvariable=self.timing_summary,style="Subhead.TLabel",wraplength=780).grid(row=6,column=0,columnspan=2,sticky="w",pady=12)
+        ttk.Label(page,text=("BMI270: the pinned Betaflight driver fixes gyro at 3200 Hz and accelerometer at 800 Hz.\n"
+            "PID / mixer rate = gyro rate ÷ PID divider. Increase the divider to study slower control and motor updates.\n"
+            "ANGLE attitude rate = accelerometer rate ÷ estimator divider; RATE / ACRO uses 100 Hz.\n"
+            "Receiver frames are independent of the IMU: match your radio link when studying command latency.\n\n"
+            "Custom changes both simulated sensor sampling and firmware timing. These are experiments, not BMI270 options.\n"
+            "Legacy 4 kHz preserves older cases: firmware gyro / accel remain 4000 Hz while plant sensors use the selected rates.\n"
+            "Rates apply on the next run, before firmware filter initialization and calibration. Ideal clock timing is simulated;\n"
+            "CPU load, SPI delay and hardware jitter are not. Actual task counts and intervals are saved with each run."),
+            style="Muted.TLabel",wraplength=870).pack(anchor="w",pady=8)
+        box=self.section(page,"Startup and motor mapping")
+        for row,(key,label) in enumerate((("warmup","Calibration warmup (s)"),("arm_settle","Arming settle time (s)"),("spoolup","Throttle settling before release (s)"),("motor_order","Plant motor order (1–4)"))): self.field(box,row,label,key)
+        ttk.Label(page,text="ODE5 integration and logging remain independent settings on Run setup. A faster log does not increase the PID rate.",style="Muted.TLabel",wraplength=870).pack(anchor="w",pady=10)
+        summary=self.section(self.run_page,"Flight-controller timing")
+        summary.pack_configure(before=self.run_box)
+        ttk.Label(summary,textvariable=self.timing_summary,style="Subhead.TLabel",wraplength=850).pack(anchor="w",pady=4)
+        ttk.Button(summary,text="Configure firmware timing…",command=lambda:self.settings_tabs.select(page.master.master)).pack(anchor="w",pady=6)
+        for key in ("timing_profile","gyro.sample_rate","accel.sample_rate","rc_hz","command_mode"):
+            self.fields[key].trace_add("write",self.refresh_timing)
+        for key in ("pid_process_denom","imu_process_denom"):
+            self.fw_fields[key].trace_add("write",self.refresh_timing)
+
+    def select_timing_profile(self,event=None):
+        if self.fields["timing_profile"].get()=="BMI270":
+            self.fields["gyro.sample_rate"].set(3200); self.fields["accel.sample_rate"].set(800)
+        self.refresh_timing()
+
+    def refresh_timing(self,*args):
+        if self._populate_busy: return
+        profile=self.fields["timing_profile"].get()
+        for sensor in ("gyro","accel"):
+            self.field_widgets[sensor+".sample_rate"][0].configure(state="disabled" if profile=="BMI270" else "readonly" if profile=="Custom" else "normal")
+        try:
+            gyro,accel=(4000,4000) if profile=="Legacy 4 kHz" else (float(self.fields[s+".sample_rate"].get()) for s in ("gyro","accel"))
+            pid=gyro/float(self.fw_fields["pid_process_denom"].get())
+            attitude=accel/float(self.fw_fields["imu_process_denom"].get())
+            mode=self.fields["command_mode"].get(); rc=float(self.fields["rc_hz"].get())
+            self.timing_summary.set(f"{profile}  |  Gyro {gyro:g} Hz  •  Accel {accel:g} Hz  •  PID / mixer {pid:g} Hz\n"
+                f"Attitude: {attitude:g} Hz ANGLE / 100 Hz RATE  •  Receiver frames {rc:g} Hz  |  Command mode: {mode.upper()}")
+        except (ValueError,ZeroDivisionError): self.timing_summary.set("Enter valid rates and dividers to preview firmware timing.")
 
     def receiver_page(self):
         page=self.setting_page("Receiver channels"); box=self.section(page,"Receiver pulses (µs)")
@@ -216,13 +276,17 @@ class ParityFeatures:
                 self.case["receiver_disarmed"]=channels["rc_disarmed"]; self.case["receiver_flight"]=channels["rc_flight"]
             except ValueError: pass
         self._legacy_populate()
+        self.notes_text.delete("1.0","end")
+        self.notes_text.insert("1.0",self.case.get("notes",""))
         for key,var in self.profile_vars.items(): var.set(str(self.case["profiles"][key]))
         self.sequence.delete("1.0","end")
         self.sequence.insert("1.0","\n".join(", ".join(f"{x:g}" for x in row) for row in self.case["schedule"]))
         self.refresh_catalog(); self.show_command_section(); self._populate_busy=False
+        self.refresh_timing()
 
     def collect(self):
         case=self._legacy_collect()
+        case["notes"]=self.notes_text.get("1.0","end-1c")
         lines=self.sequence.get("1.0","end").strip().splitlines(); sequence=[]
         for line in lines:
             if line.strip(): sequence.append([float(x) for x in line.replace(","," ").split()])
@@ -237,6 +301,8 @@ class ParityFeatures:
     def catalog_preset(self,kind):
         file=cfg.ROOT/"catalog"/("script_defaults.json" if kind=="script_defaults" else kind+"_settings.json")
         self.case=cfg.from_matlab(json.loads(file.read_text()))
+        self.case["timing_profile"]="BMI270"
+        self.case["gyro"]["sample_rate"]=3200; self.case["accel"]["sample_rate"]=800
         self.case["name"]={"hover":"Noisy trimmed hover","recovery":"Noisy attitude recovery","angle":"Angle pulses","rate":"Rate doublets","script_defaults":"Script defaults"}[kind]
         self.populate()
     def add_command(self):

@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "batch_trials": 3,
+  "workers": 2,
+  "baseline_unchanged": true,
+  "variation_examples": 5,
+  "chart_views": 5,
+  "rapid_selection": true,
+  "open_trial_in_explorer": true,
+  "undock": true,
+  "reprocess_reload": true,
+  "normal_run_after_batch": true,
+  "callback_errors": [],
+  "study": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\monte_carlo\\20261103_214322_72eede73",
+  "close_stops_child_processes": true
+}

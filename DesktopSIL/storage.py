@@ -39,11 +39,13 @@ class Record:
         return f"{label} ({unit})" if unit else label,s.time,values
 
 def infer_unit(name):
+    if name.startswith('task_') and name.endswith('_s'): return 's'
     for suffix,unit in (("_radps","rad/s"),("_rad","rad"),("_mps2","m/s²"),("_mps","m/s"),("_m","m"),("_pot","pot"),("_us","µs")):
         if name.endswith(suffix): return unit
     return "native PID" if any(x in name for x in ("_P","_I","_D","_F","_sum")) else ""
 
 def infer_group(name):
+    if name.startswith('task_'): return 'Firmware task timing'
     if name.startswith(("raw_","ideal_")): return "Raw / ideal IMU"
     if name.startswith("reference_"): return "Requested commands"
     if name.startswith("estimate_"): return "Estimated state"
@@ -153,6 +155,8 @@ def finalize(folder):
     for name in ("signals.bin","signals.csv"): (folder/name).unlink(missing_ok=True)
     summary=read_json(folder/"engine_summary.json")
     metadata=read_json(folder/"metadata.json"); metadata.update(status="complete" if summary.get("completed") else ("stopped" if summary.get("stopped") else "failed"),signal_count=len(record.signals))
+    if 'task_timing' in summary: metadata['measured_task_timing']=summary['task_timing']
+    if 'integration' in summary: metadata['measured_integration']=summary['integration']
     (folder/"metadata.json").write_text(json.dumps(metadata,indent=2)+"\n",encoding="utf-8")
 
 def matlab_value(file,node):

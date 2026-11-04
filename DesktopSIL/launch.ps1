@@ -8,4 +8,4 @@ $python = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Obje
 if (!$python) { $python = (Get-Command pythonw.exe -ErrorAction SilentlyContinue).Source }
 if (!$python) { throw 'Install Python with tkinter and NumPy, then run python DesktopSIL/app.py.' }
 # This is the interactive application window, not a background helper.
-Start-Process -FilePath $python -ArgumentList @(('"'+(Join-Path $PSScriptRoot 'app.py')+'"')) -WorkingDirectory $PSScriptRoot -WindowStyle Normal
+Start-Process -FilePath $python -ArgumentList @(('"'+(Join-Path $PSScriptRoot 'launch.py')+'"')) -WorkingDirectory $PSScriptRoot -WindowStyle Normal

@@ -76,6 +76,8 @@ class App(ParityFeatures,tk.Tk):
         self.runs.pack(fill="both",expand=True,pady=12); self.runs.bind("<Double-Button-1>",lambda e:self.open_archive())
         ttk.Label(self,text="C engine runs independently of MATLAB • Angular inputs use degrees • HDF5 archives and CSV/MAT data exports use SI units",style="Muted.TLabel").pack(anchor="w",padx=24,pady=(0,10))
         self.enhance(); self.populate(); self.refresh_runs(); self.protocol("WM_DELETE_WINDOW",self.close)
+        from monte_carlo_ui import MonteCarloPanel
+        self.monte_carlo=MonteCarloPanel(self)
         self.after(100,self.poll)
         self.bind("<MouseWheel>",self.scroll_settings,add="+")
     def scroll_settings(self,event):
@@ -156,7 +158,7 @@ class App(ParityFeatures,tk.Tk):
     def firmware_page(self):
         page=self.setting_page("Firmware CLI")
         ttk.Label(page,text="Configuration is processed by the real Betaflight CLI before each run.",style="Subhead.TLabel").pack(anchor="w")
-        ttk.Label(page,text="PID and filter controls update this text when you enter this page. Keep the 4 kHz loop, PWM output and four-motor mixer.\nChanging receiver mapping or AUX ranges also requires matching receiver arrays in the saved JSON. Startup verifies arming, modes and loop timing.",style="Muted.TLabel").pack(anchor="w",pady=8)
+        ttk.Label(page,text="PID and filter controls update this text when you enter this page. Select rates on Firmware timing / startup. Keep PWM output and the four-motor mixer.\nStartup verifies arming, modes and loop timing. Automatic receiver channels follow the map and AUX ranges.",style="Muted.TLabel").pack(anchor="w",pady=8)
         self.cli=tk.Text(page,height=25,bg="#111b29",fg="#d8e4f0",insertbackground="white",font=("Consolas",10),undo=True,wrap="none")
         self.cli.pack(fill="both",expand=True)
         self.cli_page=page.master.master
@@ -240,6 +242,8 @@ class App(ParityFeatures,tk.Tk):
         except Exception as e: messagebox.showerror("Load settings",str(e))
     def run(self):
         if self.running: return
+        if self.monte_carlo.busy:
+            messagebox.showinfo('Simulation','Finish or stop the Monte Carlo operation first.'); return
         try: self.sync_cli(); self.case=self.collect()
         except Exception as e: messagebox.showerror("Check settings",str(e)); return
         self.running=True; self.folder=None; self.process=None; self.paused=False; self.stop_requested=False; self.progress["value"]=0
@@ -299,7 +303,7 @@ class App(ParityFeatures,tk.Tk):
                     self.preview_pending=False
                     if value and not self.closing: messagebox.showerror("Open signals",value)
         except queue.Empty: pass
-        if self.closing and not self.running: self.destroy(); return
+        if self.closing and not self.running and not self.monte_carlo.busy: self.destroy(); return
         self.after(100,self.poll)
     def _legacy_read_data(self,folder,preview=False):
         def worker():
@@ -350,13 +354,25 @@ class App(ParityFeatures,tk.Tk):
         if folder: self.read_data(Path(folder))
     def close(self):
         self.closing=True; self.stop()
-        if not self.running: self.destroy()
+        self.monte_carlo.stop()
+        if not self.running and not self.monte_carlo.busy: self.destroy()
         else:
             self.status.set("Stopping the native process…")
             self.after(5000,self.force_close)
     def force_close(self):
         if self.process and self.process.poll() is None: self.process.terminate()
-        if not self.running: self.destroy()
+        self.monte_carlo.terminate()
+        if not self.running and not self.monte_carlo.busy: self.destroy()
+    def destroy(self):
+        if getattr(self,"_destroyed",False): return
+        self._destroyed=True
+        # Cancel timers before deleting their Tcl commands. This also covers
+        # child panels and deferred Matplotlib draws when reopening in-process.
+        for timer in self.tk.call("after","info"):
+            # Let each owning widget delete its own registered Tcl command.
+            try: self.tk.call("after","cancel",timer)
+            except tk.TclError: pass
+        super().destroy()
 
 if __name__=="__main__":
     App().mainloop()

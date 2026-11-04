@@ -9,6 +9,18 @@ import numpy as np
 ROOT=Path(__file__).resolve().parent
 SCHEMA=json.loads((ROOT/"catalog/firmware_schema.json").read_text())
 BY_NAME={item["Name"]:item for item in SCHEMA}
+TIMING_PROFILES=("BMI270", "Custom", "Legacy 4 kHz")
+INTEGRATION_RATES=(3200,4000,6400,8000,16000,32000,64000)
+
+def timing(case):
+    legacy=case.get("timing_profile","Legacy 4 kHz")=="Legacy 4 kHz"
+    gyro=4000 if legacy else float(case["gyro"]["sample_rate"])
+    accel=4000 if legacy else float(case["accel"]["sample_rate"])
+    divider=int(firmware_value(case,"pid_process_denom"))
+    imu_divider=int(firmware_value(case,"imu_process_denom"))
+    return {"profile":case.get("timing_profile","Legacy 4 kHz"),"gyro_hz":gyro,"accel_hz":accel,
+            "pid_hz":gyro/divider,"angle_attitude_hz":accel/imu_divider,"rate_attitude_hz":100,
+            "receiver_hz":float(case.get("rc_hz",100)),"synchronized":not legacy}
 
 def selected_profiles(cli):
     selected={"profile":0,"rateprofile":0,"battery_profile":0}
@@ -65,7 +77,7 @@ def upgrade(case):
     case=copy.deepcopy(case)
     if case.get("Format")=="HoverWorkbenchSettings": return from_matlab(case["Settings"],case.get("Options",{}))
     if "sim_fidelity" in case and "Betaflight" in case: return from_matlab(case)
-    defaults={"fidelity":"high","notes":"","default_plots":True,"schedule":[],"rc_hz":100,"plant_hz":16000,
+    defaults={"fidelity":"high","notes":"","default_plots":True,"schedule":[],"rc_hz":100,"plant_hz":16000,"timing_profile":"Legacy 4 kHz",
               "profiles":selected_profiles(case["firmware_cli"]),"custom_receiver":False,"motor_order":[1,2,3,4]}
     for key,value in defaults.items(): case.setdefault(key,value)
     for sensor,hz,rng in (("gyro",3200,1000),("accel",1600,4)):
@@ -104,6 +116,7 @@ def from_matlab(settings,options=None):
     if case["custom_receiver"]: case["receiver_flight"]=adapter["ReceiverPWM"]
     if adapter.get("StartupReceiverPWM",[]): case["receiver_disarmed"]=adapter["StartupReceiverPWM"]
     case["matlab_settings"]=original
+    case["timing_profile"]="Legacy 4 kHz"
     case["legacy_controller"]="Betaflight" not in original
     case["known_accel_calibration"]=adapter.get("UseKnownAccelCalibration",False)
     if "ThrottlePWM" not in adapter:

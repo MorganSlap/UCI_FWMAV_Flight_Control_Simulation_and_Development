@@ -2,6 +2,8 @@
  * sample scheduler as the native engine, with fixed open-loop commands. */
 #include "desktop_sil.c"
 double bfDesktopImuTelemetry[12];
+double bfDesktopTaskTiming[30];
+void bfDesktopResetTiming(void) { memset(bfDesktopTaskTiming,0,sizeof(bfDesktopTaskTiming)); }
 int bfDesktopStep(const double *req,double *resp) { (void)req; (void)resp; return 0; }
 int main(int argc,char **argv) {
     if(argc!=3 || !readSettings(argv[1])) return 2;

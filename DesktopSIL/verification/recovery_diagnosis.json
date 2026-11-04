@@ -1,0 +1,106 @@
+{
+  "recovery_kp_restored": [
+    {
+      "source": "20261101_221701_92eebf",
+      "run": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_222221_d667cc",
+      "changes": {
+        "estimator_kp": 0.25,
+        "logging_hz": 1000
+      },
+      "degrees_at_0_1_5_10_30_60": {
+        "roll_rad": [
+          5.0,
+          0.8289991796822919,
+          0.09903770522469967,
+          0.011580968946983109,
+          0.13001959573659602,
+          0.11429304533359545
+        ],
+        "pitch_rad": [
+          -3.0000000000000004,
+          -0.5628797371344355,
+          -0.13444653885451655,
+          -0.030437339501934405,
+          -0.023608519996944407,
+          -0.0038910403867528586
+        ],
+        "estimate_roll_rad": [
+          4.9,
+          0.4,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "estimate_pitch_rad": [
+          -2.9,
+          -0.30000000000000004,
+          -0.1,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "source": "20261101_221459_d890b7",
+      "run": "C:\\Users\\bmatt\\Local Documents\\UCI_FWMAV_Flight_Control_Simulation_and_Development\\DesktopSIL\\runs\\20261101_222225_e7ac2a",
+      "changes": {
+        "estimator_kp": 0.25,
+        "logging_hz": 1000
+      },
+      "degrees_at_0_1_5_10_30_60": {
+        "roll_rad": [
+          5.0,
+          0.3054536940301811,
+          0.07856479997517186,
+          0.08723853306256242,
+          0.10298453303615417,
+          0.11448172665144724
+        ],
+        "pitch_rad": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "estimate_roll_rad": [
+          4.9,
+          0.1,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "estimate_pitch_rad": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  ],
+  "gyro_quantization_step_deg_s": 0.06103515625,
+  "gyro_zero_rounding_threshold_deg_s": 0.030517578125,
+  "accelerometer_counts_per_g": 256,
+  "attitude_telemetry_step_deg": 0.1,
+  "gyro_only_30_60s": {
+    "true_roll_rate_mean_deg_s": 0.02817425255166072,
+    "mahony_input_mean_deg_s": 0.0004028213459153872,
+    "fraction_input_near_zero": 0.8180393986867105
+  },
+  "pulse_noise_off": {
+    "run": "20261101_214416_090dcb",
+    "true_roll_at_5s_deg": 11.28190825805603,
+    "estimated_roll_at_5s_deg": 10.0,
+    "accel_apparent_roll_at_5s_deg": 10.835711869836834,
+    "max_apparent_minus_true_roll_deg": 6.441755945209404,
+    "accel_accepted_fraction": 1.0
+  },
+  "matlab_sensor_check": "Raw minus ideal gyro is exactly zero at sensor update timestamps with noise disabled."
+}

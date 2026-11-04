@@ -1,5 +1,6 @@
 {
   "passed": true,
+  "timing_profile_roundtrip": true,
   "repeated_runs": 3,
   "pid_cli_roundtrip": true,
   "profiles_catalog_commands": true,

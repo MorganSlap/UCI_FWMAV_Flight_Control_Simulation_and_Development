@@ -11,9 +11,10 @@ Betaflight host executable are unchanged by this desktop implementation.
 
 The illustrated [PowerPoint walkthrough](docs/Desktop_SIL_Walkthrough.pptx)
 covers opening the app, configuring runs, plotting, signal definitions, C
-generation, verification, plant updates and future packaging. The
-[firmware timing guide](docs/Firmware_Timing.md) describes the November 2 timing
-update and supersedes the older timing values in that presentation.
+generation, verification, plant updates and future packaging. Slides 22–32
+walk through Monte Carlo case capture, distributions, batch controls, analysis,
+and saved studies. The [firmware timing guide](docs/Firmware_Timing.md) provides
+additional detail on the current rates and integration options.
 
 ## Open and run
 

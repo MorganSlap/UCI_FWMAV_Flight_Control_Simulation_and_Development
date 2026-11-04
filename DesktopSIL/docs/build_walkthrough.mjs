@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
+import {appendMonteCarloSlides} from './monte_carlo_slides.mjs';
 const here=path.dirname(fileURLToPath(import.meta.url));
 const {Presentation,PresentationFile}=await import(pathToFileURL(path.join(here,'build/node_modules/@oai/artifact-tool/dist/artifact_tool.mjs')).href);
 const skill='C:/Users/bmatt/.codex/plugins/cache/openai-primary-runtime/presentations/26.1026.10807/skills/presentations';
@@ -39,8 +40,8 @@ function table(s,values,widths,y=150,height=470){
 }
 let s=deck.slides.add();s.background.fill='#182639';
 text(s,'Native desktop\nflight simulation',64,145,1130,200,68,true,'#FFFFFF');
-text(s,'User workflow, generated C, Betaflight SITL and project files',68,395,1100,100,31,false,'#D5DFEB');
-text(s,'codex/desktop-sil     November 1, 2026',68,610,1100,48,24,false,'#F0BC61');
+text(s,'User workflow, Monte Carlo studies, generated C and Betaflight SITL',68,395,1100,100,31,false,'#D5DFEB');
+text(s,'feature/SITL_sim_Codex     Updated November 4, 2026',68,610,1100,48,24,false,'#F0BC61');
 s.speakerNotes.text='Companion guide: DesktopSIL/README.md. This implementation is a Python/Tk interface around generated Simulink C linked directly with the actual pinned Betaflight SITL firmware. The original Simulink model and MATLAB workbench were preserved.';
 
 s=slide('Opening the application','Sources: DesktopSIL/Open Desktop SIL.cmd, launch.ps1, setup-python.ps1. These instructions refer to the current prepared workspace. Python dependencies and the native engine are already built on this computer. A fresh clone needs the setup/build steps in README.md.');
@@ -98,7 +99,7 @@ text(s,'The original blocks are copied into separate linear and nonlinear models
 s.images.add({blob:new Uint8Array(await fs.readFile(path.join(here,'images/generated_plant.png'))),contentType:'image/png',alt:'Actual Simulink plant prepared for C generation',fit:'contain',position:{left:75,top:215,width:1130,height:460}});
 
 s=slide('Closed-loop data and timing','Sources: DesktopSIL/native/desktop_sil.c, plant_adapter.c and Betaflight/host/bf_host.c. The adapter calls the actual host step function directly. Native sensor values are delivered as virtual ADC measurements; truth attitude is not substituted for estimator feedback. Maximum solver step is 1/16000 s, with shorter steps to reach configured events.');
-table(s,[['Stage','Data / behavior','Default timing'],['Firmware output','Four motor commands minus plant hover trim','PID / mixer: 4 kHz'],['Actuator and dynamics','Original actuator response; linear or nonlinear motion','ODE5: max step 1/16000 s'],['Ideal IMU and sensors','Body rates and specific force, with noise and bias','Gyro 3.2 kHz; accel 1.6 kHz'],['Betaflight input','Virtual ADC, calibration, filters, estimator, PID and mixer','Firmware gyro loop: 4 kHz'],['Command and logging','Receiver frames and held references; full base-grid archive','RC 100 Hz; logging 16 kHz']],[230,610,320],145,450);
+table(s,[['Stage','Data / behavior','Current BMI270 defaults'],['Firmware output','Four motor commands minus plant hover trim','PID / mixer: 3.2 kHz'],['Actuator and dynamics','Original actuator response; linear or nonlinear motion','ODE5: max step 1/16000 s'],['Ideal IMU and sensors','Body rates and specific force, with noise and bias','Gyro 3.2 kHz\nAccel 800 Hz'],['Betaflight input','Virtual ADC, calibration, filters, estimator, PID and mixer','ANGLE attitude: 400 Hz\nRATE attitude: 100 Hz'],['Command and logging','Receiver frames, held references and independently sampled logs','RC 100 Hz\nLogging 4 kHz']],[230,610,320],145,450);
 text(s,'The UI uses degrees. Plant and archived angular signals use radians. Receiver and motor values use µs / pot.',60,625,1160,65,25,false,muted);
 
 s=slide('Generating and compiling C','Sources: DesktopSIL/matlab/buildPlantCode.m, build.ps1. MATLAB R2025b Update 3, Simulink Coder and Embedded Coder were already installed. ert.tlc generates C with continuous-time support, fixed-step ode5, tunable parameters, separate output/update and code-only generation. Cygwin GCC 13.5 compiles and links the generated plant and actual firmware. Generated Academic License headers are preserved.');
@@ -119,7 +120,7 @@ s=slide('Run archives and MATLAB interoperability','Sources: DesktopSIL/storage.
 table(s,[['Saved item','Contents'],['settings.json + derived.json','Input configuration and calculated plant values'],['configuration.cli + native EEPROM','Effective firmware configuration'],['signals.h5','Signal values, time grids, units and groups'],['metadata.json + engine_summary.json','Firmware pin, executable SHA256, timing and status'],['engine / configuration logs','Diagnostics for setup or run failures']],[490,670],145,400);
 text(s,'CSV/MAT exports keep every logged sample. The MATLAB helper creates hoverSignals timeseries and hoverRun metadata.',60,590,1150,80,28);
 
-s=slide('Verification and measured performance','Sources: DesktopSIL/verification/runtime_plant_equivalence.json, native_acceptance.json and ui_acceptance.json. Seven ODE5 plant tests used asymmetric motor inputs [3,-2,1,4], both fidelities, noise on/off, changed mass, drag, actuator, sensor density and rates. Every case was below 3.1e-14. Error is component-wise across different physical units. The 3.62-second engine timing is a sample measurement, not a controlled benchmark against MATLAB, and excludes HDF5 archiving.');
+s=slide('Verification and November 1 benchmarks','Sources: DesktopSIL/verification/runtime_plant_equivalence.json, native_acceptance.json and ui_acceptance.json. Seven ODE5 plant tests used asymmetric motor inputs [3,-2,1,4], both fidelities, noise on/off, changed mass, drag, actuator, sensor density and rates. Every case was below 3.1e-14. Error is component-wise across different physical units. The 3.62-second engine timing is a sample measurement, not a controlled benchmark against MATLAB, and excludes HDF5 archiving.');
 table(s,[['Check','Observed result'],['Generated ODE5 C versus Simulink','Seven cases passed; maximum absolute difference < 3.1 × 10⁻¹⁴'],['Actual firmware replay','29,202 exchanges; all 40 response values exactly equal'],['Desktop workflow','Repeated runs, 15 views, seven analysis panels, import/export passed'],['60-second noisy ODE5 run','3.62 s engine time; 960,001 rows; 239.9 MB HDF5 archive'],['Five-minute step-halving tests','Quiet and noisy cases converge; details on the following slides']],[465,695],145,425);
 text(s,'In the 60-second case, roll/pitch stayed within 1.46°. Position drift remains because the example has no altitude or position control.',60,600,1160,78,26,false,muted);
 
@@ -138,7 +139,7 @@ text(s,'Mahony propagation-rate diagnostics are also logged. Postprocessing does
 s=slide('ODE5 and the drift investigation','Sources: verification/integrator_convergence.json, runtime_plant_equivalence.json. ODE5 is fifth-order Dormand–Prince: https://www.mathworks.com/help/simulink/ug/fixed-step-solvers-in-simulink.html . Fixed-step is a requirement of the chosen ERT generation route, not a physical requirement of the plant. Tests compare identical settings and seeds. Position/attitude figures below are maximum component-wise differences over saved samples.');
 table(s,[['Comparison','Max attitude difference','Max position difference'],['ODE3 vs ODE5: noisy 60 s','6.61 × 10⁻¹² degrees','2.66 × 10⁻¹¹ m'],['ODE5, 16 vs 32 kHz: quiet 300 s','2.50 × 10⁻¹¹ degrees','2.46 × 10⁻⁹ m'],['ODE5, 16 vs 32 kHz: noisy 300 s','3.18 × 10⁻¹¹ degrees','1.02 × 10⁻⁹ m']],[600,280,280],150,320);
 paragraphs(s,[
-  'ODE5 is now the default. Run setup permits 16, 32 or 64 kHz integration while retaining independent sensor/controller rates.',
+  'ODE5 remains the default. Integration options are 3.2, 4, 6.4, 8, 16, 32 and 64 kHz, with shorter steps at event times.',
   'These cases do not show integration-driven drift. Estimator bias, feedback quantization and uncontrolled position can still cause motion.'
 ],60,510,1150,89,27);
 
@@ -166,16 +167,20 @@ paragraphs(s,[
   'Packaging changes installation, not solver speed. Keep run archives in a writable data folder outside the installed application.'
 ],60,145,1150,125,28);
 
+await appendMonteCarloSlides(deck,{here,font});
 await fs.mkdir(path.join(here,'build/rendered'),{recursive:true});
 for(const [i,sl] of deck.slides.items.entries()){
   const png=await deck.export({slide:sl,format:'png',scale:1});
   await fs.writeFile(path.join(here,'build/rendered',`slide-${String(i+1).padStart(2,'0')}.png`),new Uint8Array(await png.arrayBuffer()));
 }
+await fs.mkdir(path.join(here,'build/final'),{recursive:true});
+const publicationFile=path.join(here,'build/final',`Desktop_SIL_Walkthrough_${Date.now()}.pptx`);
 const candidate=path.join(here,'build/candidate.pptx');
 await (await PresentationFile.exportPptx(deck)).save(candidate);
-const result=await finalizePresentation({workspaceDir:path.dirname(here),candidatePath:candidate,finalPath:path.join(here,'Desktop_SIL_Walkthrough.pptx'),
+const result=await finalizePresentation({workspaceDir:path.dirname(here),candidatePath:candidate,finalPath:publicationFile,
   pythonExecutable:path.join(runtime,'python/python.exe'),integrityValidatorPath:path.join(skill,'container_tools/inspect_presentation_package_integrity.py'),layoutValidatorPath:path.join(skill,'container_tools/inspect_presentation_layout_geometry.py'),
-  layoutArgs:['--expected-slide-size-emu','12192000,6858000','--validate-bullet-geometry','--validate-heading-fit',...[10,12,13,14,15,17,18].flatMap(n=>['--require-native-table-slide',String(n)])],
-  explicitTotalSlideCount:21,requiredNativeTableOwnerSlides:[10,12,13,14,15,17,18],fontPolicy:{basis:'design',families:[font]},verifyArtifactToolImport:true,
+  layoutArgs:['--expected-slide-size-emu','12192000,6858000','--validate-bullet-geometry','--validate-heading-fit',...[10,12,13,14,15,17,18,25,28,29,31,32].flatMap(n=>['--require-native-table-slide',String(n)])],
+  explicitTotalSlideCount:32,requiredNativeTableOwnerSlides:[10,12,13,14,15,17,18,25,28,29,31,32],fontPolicy:{basis:'design',families:[font]},verifyArtifactToolImport:true,
   receiptPath:path.join(here,'../build/presentation_validation.json')});
+await fs.copyFile(publicationFile,path.join(here,'Desktop_SIL_Walkthrough.pptx'));
 console.log(JSON.stringify(result));

@@ -13,9 +13,10 @@ import subprocess
 import sys
 import uuid
 import configuration as config_api
+import runtime_support
 
 ROOT = Path(__file__).resolve().parent
-EXE = ROOT / "build" / "hover_desktop_sil.exe"
+EXE = runtime_support.select_engine(ROOT)
 FW_PROFILE = {f"{g}_{a}" for a in ("roll", "pitch", "yaw") for g in "pidf"} | {"angle_p_gain"}
 
 def load_case(path):
@@ -108,7 +109,7 @@ def validate(case):
 def prepare(case, folder=None):
     case = config_api.upgrade(case)
     validate(case)
-    if not EXE.exists(): raise FileNotFoundError("Build the native engine first: .\\DesktopSIL\\build.ps1")
+    engine_details = runtime_support.validate_engine(EXE, ROOT)
     if folder is None:
         stamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
         folder = Path(case.get("storage_root",ROOT/"runs")) / (stamp + "_" + uuid.uuid4().hex[:6])
@@ -148,7 +149,7 @@ def prepare(case, folder=None):
         lines.append(key + " " + " ".join(format(float(x), ".17g") for x in values))
     for row in case["schedule"]: lines.append("command "+" ".join(format(x,".17g") for x in [row[0]]+[math.radians(x) for x in row[1:]]))
     (folder / "case.txt").write_text("\n".join(lines) + "\n", encoding="ascii")
-    metadata = {"engine_sha256": hashlib.sha256(EXE.read_bytes()).hexdigest(),
+    metadata = {**engine_details, "engine_sha256": hashlib.sha256(EXE.read_bytes()).hexdigest(),
                 "firmware_commit": case["firmware_commit"], "created": dt.datetime.now(dt.timezone.utc).isoformat(),
                 "angular_settings_units": "degrees and degrees/s", "logged_angular_units": "radians and radians/s",
                 "model": "hover_linear_sil" if case["fidelity"]=="low" else "hover_plant_sil", "source_model": "lin_hover_sim", "solver": "ode5", "maximum_step_s": 1/case["plant_hz"],
@@ -161,7 +162,7 @@ def prepare(case, folder=None):
 
 def environment(folder, trace=False):
     env = os.environ.copy()
-    env["PATH"] = str(ROOT.parent / "Betaflight/toolchain/cygwin/bin") + os.pathsep + env.get("PATH", "")
+    env["PATH"] = str(EXE.parent) + os.pathsep + env.get("PATH", "")
     env["BF_DESKTOP_CASE"] = "case.txt"
     settings=config_api.upgrade(json.loads((Path(folder)/"settings.json").read_text())) if (Path(folder)/"settings.json").exists() else None
     timing=config_api.timing(settings) if settings else {"gyro_hz":4000,"accel_hz":4000,"synchronized":False}

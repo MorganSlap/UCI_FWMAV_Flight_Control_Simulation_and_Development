@@ -68,14 +68,24 @@ try {
     $gyroInitFile = Join-Path $sourceRoot 'src/main/sensors/gyro_init.c'
     $schedulerFile = Join-Path $sourceRoot 'src/main/scheduler/scheduler.c'
     $sitlFile = Join-Path $sourceRoot 'src/platform/SIMULATOR/sitl.c'
+    $serialTcpFile = Join-Path $sourceRoot 'src/main/drivers/serial_tcp.c'
     $originalHost = [IO.File]::ReadAllText($hostFile)
     $originalMake = [IO.File]::ReadAllText($makeFile)
     $originalImu = [IO.File]::ReadAllText($imuFile)
     $originalGyroInit = [IO.File]::ReadAllText($gyroInitFile)
     $originalScheduler = [IO.File]::ReadAllText($schedulerFile)
     $originalSitl = [IO.File]::ReadAllText($sitlFile)
+    $originalSerialTcp = [IO.File]::ReadAllText($serialTcpFile)
     $utf8 = [Text.UTF8Encoding]::new($false)
     try {
+        # Desktop SIL feeds sensors/receiver/configuration directly. Keep the
+        # serial-port buffers and task behavior, but do not open unused UART
+        # TCP listeners (or prompt Windows for inbound firewall permission).
+        # The separate MATLAB host retains its original network behavior.
+        $serialAnchor = '    s->serv = dyad_newStream();'
+        if (!$originalSerialTcp.Contains($serialAnchor)) { throw 'SITL serial listener anchor changed.' }
+        $serialText = $originalSerialTcp.Replace($serialAnchor, ("    if (getenv(`"BF_DESKTOP_CASE`")) return s;`n" + $serialAnchor))
+        [IO.File]::WriteAllText($serialTcpFile,$serialText,$utf8)
         $hostText = $originalHost.Replace('    listenSocket = socket(AF_INET, SOCK_STREAM, 0);', "    if (getenv(`"BF_DESKTOP_CASE`")) { extern int desktopSilRun(void); exit(desktopSilRun()); }`n    listenSocket = socket(AF_INET, SOCK_STREAM, 0);")
         $hostText += "`nint bfDesktopStep(const double *request, double *response) {`n    int status = stepTo(request);`n    makeResponse(response, request, status);`n    return status;`n}`n"
         $hostText += "`n" + [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'native/firmware_timing.inc'))
@@ -140,10 +150,13 @@ try {
         [IO.File]::WriteAllText($gyroInitFile,$originalGyroInit,$utf8)
         [IO.File]::WriteAllText($schedulerFile,$originalScheduler,$utf8)
         [IO.File]::WriteAllText($sitlFile,$originalSitl,$utf8)
+        [IO.File]::WriteAllText($serialTcpFile,$originalSerialTcp,$utf8)
     }
     # Runtime DLLs belong beside the executable; no MATLAB Runtime is needed.
     foreach ($name in @('cygwin1.dll','cyggcc_s-seh-1.dll')) {
         if (Test-Path (Join-Path $cygwin "bin/$name")) { Copy-Item (Join-Path $cygwin "bin/$name") $build -Force }
     }
+    . (Join-Path $PSScriptRoot 'native-manifest.ps1')
+    Write-DesktopNativeManifest -Folder $build -MatlabRoot $MatlabRoot
     Get-FileHash -Algorithm SHA256 (Join-Path $build 'hover_desktop_sil.exe')
 } finally { $env:PATH = $oldPath }

@@ -18,6 +18,8 @@ def main():
                 print(f"Python: {sys.executable}")
                 try:
                     os.chdir(root)
+                    from runtime_support import validate_engine
+                    print(validate_engine())
                     from app import App
                     application = App()
                     application.update_idletasks()

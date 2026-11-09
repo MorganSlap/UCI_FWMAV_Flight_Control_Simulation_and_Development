@@ -1,0 +1,25 @@
+name: Desktop SIL fresh Windows checkout
+on:
+  workflow_dispatch:
+  push:
+    paths: ['DesktopSIL/**', 'Open Desktop SIL.cmd', '.github/workflows/desktop-sil-windows.yml']
+  pull_request:
+    paths: ['DesktopSIL/**', 'Open Desktop SIL.cmd', '.github/workflows/desktop-sil-windows.yml']
+permissions:
+  contents: read
+jobs:
+  fresh-checkout:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install private runtime with the actual launcher
+        shell: cmd
+        run: 'call "Open Desktop SIL.cmd" -SetupOnly -ForceManaged'
+      - name: Verify packaged engine, flights, plots, storage and parallel Monte Carlo
+        shell: pwsh
+        run: |
+          & ./DesktopSIL/build/runtime-venv/Scripts/python.exe DesktopSIL/tests/verify_portable.py --smoke --require-packaged --no-listeners
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & ./DesktopSIL/build/runtime-venv/Scripts/python.exe DesktopSIL/tests/verify_ui.py
+          exit $LASTEXITCODE

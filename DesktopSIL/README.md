@@ -18,12 +18,20 @@ additional detail on the current rates and integration options.
 
 ## Open and run
 
-Double-click **Open Desktop SIL.cmd** in this directory. The environment and
-native executable are already built on this computer. The launcher starts Python
-directly and does not require PowerShell script execution permission. From a
-PowerShell terminal, run `& '.\DesktopSIL\Open Desktop SIL.cmd'`.
-Startup failures show an error dialog and write details to
-`build/desktop-launch.log`.
+Download/clone **feature/SITL_sim_Codex**, extract the complete ZIP if applicable,
+and double-click **Open Desktop SIL.cmd** in the repository root or this directory.
+On 64-bit Intel/AMD Windows 10/11, first launch downloads private Python/Tk and
+the plotting/data libraries. Keep the setup window open until the interface
+appears. Internet is needed for setup; subsequent launches work offline.
+The native simulation engine and its DLLs are now included in Git. Running it
+requires no MATLAB, compiler, Git, or separately installed Python.
+
+Setup does not modify system Python, permanent PATH, MATLAB, or the existing
+development environment. Healthy `build/venv` and local native builds take
+precedence. See [Windows setup and troubleshooting](docs/Windows_Setup.md) for
+details and how to update the packaged plant after code generation.
+Setup logs are in `build/desktop-setup.log`; application startup errors also
+show a dialog and write to `build/desktop-launch.log`.
 
 1. On **Settings → Run setup**, choose Noisy trimmed hover, Noisy roll recovery,
    Angle pulses, or Rate doublets. Each example supplies a complete configuration.
@@ -237,6 +245,9 @@ Paths below are relative to the repository root.
 | `DesktopSIL/build.ps1` | GCC compilation and direct link into actual firmware |
 | `DesktopSIL/build/hover_desktop_sil.exe` | Native executable; Cygwin runtime DLLs are adjacent |
 | `DesktopSIL/build/venv/` | Isolated Python dependencies |
+| `DesktopSIL/runtime/windows-x64/` | Git-tracked engine and DLLs used by a fresh download |
+| `DesktopSIL/build/runtime-venv/`, `build/portable-python/` | Private Python environment installed on first launch |
+| `DesktopSIL/publish-runtime.ps1`, `native-manifest.ps1` | Publish a verified local build and record source/file checksums |
 | `DesktopSIL/catalog/`, `presets/` | Exported original settings, native CLI schema and examples |
 | `DesktopSIL/runs/` | Default results library; configurable in the GUI |
 | `DesktopSIL/verification/` | Numerical, firmware and GUI acceptance reports |
@@ -264,19 +275,31 @@ Then in PowerShell:
 
 ```powershell
 .\DesktopSIL\build.ps1
-.\DesktopSIL\setup-python.ps1  # only needed when setting up the Python environment
-& .\DesktopSIL\build\venv\Scripts\python.exe DesktopSIL/tests/verify_native.py
-& .\DesktopSIL\build\venv\Scripts\python.exe DesktopSIL/tests/verify_timing.py
-& .\DesktopSIL\build\venv\Scripts\python.exe DesktopSIL/tests/verify_ui.py
-& .\DesktopSIL\build\venv\Scripts\python.exe DesktopSIL/tests/prepare_plant_probes.py
+& '.\Open Desktop SIL.cmd' -SetupOnly
+$silPython = '.\DesktopSIL\build\runtime-venv\Scripts\python.exe'
+if (Test-Path '.\DesktopSIL\build\venv\Scripts\python.exe') {
+    $silPython = '.\DesktopSIL\build\venv\Scripts\python.exe'
+}
+& $silPython DesktopSIL/tests/verify_native.py
+& $silPython DesktopSIL/tests/verify_timing.py
+& $silPython DesktopSIL/tests/verify_ui.py
+& $silPython DesktopSIL/tests/prepare_plant_probes.py
 ```
 
 After preparing plant probes, run `verifyRuntimePlants` in MATLAB. The build uses
 the repository's existing Cygwin GCC toolchain and firmware build checkout.
 MATLAB/Simulink headers are needed to rebuild the generated C, but the finished
-executable does not need MATLAB Runtime. `build/` and run data are intentionally
-ignored by Git; a fresh checkout must rebuild/install them. For a different
+executable does not need MATLAB Runtime. `build/` and run data remain ignored by
+Git. A fresh checkout runs the packaged engine without rebuilding. On a new
+development computer, run `Betaflight/build-host.ps1 -InstallToolchain` first
+and install the appropriate MATLAB code-generation products. For a different
 MATLAB installation, pass `-MatlabRoot` to `build.ps1`.
+
+Restart the app after rebuilding to use the new local engine. To distribute
+that plant update, run `DesktopSIL/publish-runtime.ps1` after verification and
+commit the refreshed `runtime/windows-x64` files together with the generated C
+and source/model changes. The publisher refuses changed sources or binaries
+that do not match the build manifest. See [Windows setup](docs/Windows_Setup.md).
 
 ## Archive contents and verification
 
@@ -405,17 +428,16 @@ The control allocator/mixer must also match each geometry: a modular plant alone
 does not make the current four-motor Betaflight adapter control arbitrary vehicles.
 This is an extension plan, not a modification already made to the plant.
 
-## Standalone desktop packaging
+## Desktop distribution
 
-The flight engine is already a native executable. The GUI is currently launched
-with Python in an isolated environment; this is convenient while editing and
-debugging. It can be bundled with Python, Tk, plotting/data libraries, catalogs,
-presets, the native engine and Cygwin DLLs so another user opens one application
-without installing Python or MATLAB.
+The repository is a portable source application with automatic first-run setup,
+not a single-file GUI executable or system-wide installer. It includes the
+native flight engine and Cygwin DLLs. Python/Tk and data libraries install into
+the checkout on first launch. No system Python installation is required.
 
-For distribution, prefer a **one-folder application with an installer/shortcut**
-first. A single-file package is also possible but extracts dependencies on startup
-and is harder to diagnose. Packaging does not accelerate the C flight loop.
-Writable run data should live outside the installed application directory.
-The repository currently supplies a working launcher, not a tested distribution
-installer. See [PyInstaller's packaging modes](https://pyinstaller.org/en/stable/operating-mode.html).
+Keeping the Python source and local-build preference preserves rapid GUI edits
+and the Simulink re-autocode workflow. The runtime setup never replaces local
+development builds or their environment. Packaging does not change simulation
+speed or the native flight loop. Use a writable extracted folder for this
+distribution; an installer with separate user-data storage remains a possible
+future delivery format.
